@@ -561,7 +561,7 @@ def main():
         r"\begin{table}[htbp]",
         r"\centering",
         r"\small",
-        r"\caption{Held-out real-data comparison of calibration-instability models across three public tabular benchmarks. Model A uses only outcome ambiguity $A(x)=\hat p(1-\hat p)$; Model B adds base-model epistemic uncertainty $E_{\mathrm{model}}(x)$; Model C adds Venn--Abers width $w(x)$. Across all datasets, Venn--Abers width yields substantial and statistically decisive increases in explanatory power for calibration instability ($\Delta R^2$, 95\% bootstrap CI over 2,000 resamples), confirming that width captures calibration-specific support distinct from outcome ambiguity and base-model uncertainty.}",
+        r"\caption{Held-out real-data comparison of calibration-instability models across three public tabular benchmarks. Model A uses score-conditional outcome ambiguity $A(x)=\hat p(1-\hat p)$; Model B adds base-model epistemic uncertainty $E_{\mathrm{model}}(x)$; Model C adds Venn--Abers width $w(x)$. Across all datasets, Venn--Abers width provides an additional statistically detectable contribution to explaining calibration instability ($\Delta R^2$, 95\% bootstrap CI over 2,000 resamples), consistent with width capturing calibration-support information distinct from outcome ambiguity and base-model uncertainty.}",
         r"\label{tab:real_data_nested}",
         r"\begin{tabular}{llccc}",
         r"\toprule",
