@@ -1,9 +1,14 @@
 """
-src/replot_figures_6_7.py
+src/plot_figures_6_7.py
 
-Script to replot Figures 6 and 7 with properly formatted North-East legends
-and sufficient y-axis headroom to prevent any overlap between curve data and legend boxes.
-Saves updated plots and data to both paper/ and target repositories.
+Generates publication-quality Figures 6 and 7:
+  - Figure 6: Controlled local calibration support thinning (UCI Adult, Bank, Spambase)
+  - Figure 7: Reverse training support intervention (Base-model uncertainty vs width)
+
+Features:
+  - North-East legends with generous y-axis headroom to eliminate any overlap with curve data.
+  - Generates both high-resolution PNG (300 DPI) and vector PDF assets.
+  - Automatically checks data directories and caches reverse intervention results.
 """
 
 import os
@@ -57,7 +62,13 @@ def compute_va_probs(s_cal, y_cal, s_test):
     return p0, p1, p_hat, width
 
 def plot_figure_6(df_thinning, output_paths):
-    print("Plotting Figure 6 (real_data_local_support)...")
+    """
+    Plots Figure 6: Controlled local calibration support thinning.
+    Panel (a): Mean Venn--Abers width vs. retained local support.
+    Panel (b): Calibration bootstrap SD vs. retained local support.
+    Panel (c): Base-model epistemic SD (invariant by construction).
+    """
+    print("Plotting Figure 6: Real-Data Local Support Thinning...")
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(12.0, 3.8))
     
     palette = {"adult": "#1f77b4", "bank": "#2ca02c", "spambase": "#d62728"}
@@ -115,12 +126,17 @@ def plot_figure_6(df_thinning, output_paths):
     for p in output_paths:
         os.makedirs(os.path.dirname(p), exist_ok=True)
         plt.savefig(p, dpi=300 if p.endswith('.png') else None)
-        print(f"Saved Figure 6 to {p}")
+        print(f"  Saved Figure 6 to {p}")
     plt.close()
 
 def run_or_load_reverse(datasets, seed=42, B_model=100):
+    """
+    Loads precomputed reverse intervention results from CSV if available,
+    or runs the reverse intervention (subsampling training set without replacement).
+    """
     rev_csv_candidates = [
         "data/REVERSE_INTERVENTION_RESULTS.csv",
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "REVERSE_INTERVENTION_RESULTS.csv"),
         "/Users/ivanpetej/Projects/va-width-experiments/data/REVERSE_INTERVENTION_RESULTS.csv"
     ]
     for c in rev_csv_candidates:
@@ -200,13 +216,19 @@ def run_or_load_reverse(datasets, seed=42, B_model=100):
     df_rev = pd.DataFrame(all_reverse)
     os.makedirs("data", exist_ok=True)
     df_rev.to_csv("data/REVERSE_INTERVENTION_RESULTS.csv", index=False)
-    os.makedirs("/Users/ivanpetej/Projects/va-width-experiments/data", exist_ok=True)
-    df_rev.to_csv("/Users/ivanpetej/Projects/va-width-experiments/data/REVERSE_INTERVENTION_RESULTS.csv", index=False)
+    target_repo_data = "/Users/ivanpetej/Projects/va-width-experiments/data"
+    if os.path.exists(target_repo_data):
+        df_rev.to_csv(os.path.join(target_repo_data, "REVERSE_INTERVENTION_RESULTS.csv"), index=False)
     print("Saved data/REVERSE_INTERVENTION_RESULTS.csv")
     return df_rev
 
 def plot_figure_7(df_reverse, output_paths):
-    print("Plotting Figure 7 (training_support_epistemic)...")
+    """
+    Plots Figure 7: Reverse training support intervention.
+    Panel (a): Base model epistemic SD vs. retained training support.
+    Panel (b): Calibration width under fixed calibration support.
+    """
+    print("Plotting Figure 7: Reverse Training Intervention...")
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.5, 3.8))
     
     palette = {"adult": "#1f77b4", "bank": "#2ca02c", "spambase": "#d62728"}
@@ -247,31 +269,44 @@ def plot_figure_7(df_reverse, output_paths):
     for p in output_paths:
         os.makedirs(os.path.dirname(p), exist_ok=True)
         plt.savefig(p, dpi=300 if p.endswith('.png') else None)
-        print(f"Saved Figure 7 to {p}")
+        print(f"  Saved Figure 7 to {p}")
     plt.close()
 
-if __name__ == "__main__":
-    thin_csv = "data/REAL_DATA_RESULTS.csv"
+def main():
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    thin_csv = os.path.join(root, "data", "REAL_DATA_RESULTS.csv")
+    if not os.path.exists(thin_csv):
+        thin_csv = "data/REAL_DATA_RESULTS.csv"
     if not os.path.exists(thin_csv):
         thin_csv = "/Users/ivanpetej/Projects/va-width-experiments/data/REAL_DATA_RESULTS.csv"
     df_thinning = pd.read_csv(thin_csv)
 
     fig6_paths = [
-        "paper/real_data_local_support.png",
-        "paper/real_data_local_support.pdf",
-        "/Users/ivanpetej/Projects/va-width-experiments/paper/real_data_local_support.png",
-        "/Users/ivanpetej/Projects/va-width-experiments/paper/real_data_local_support.pdf"
+        os.path.join(root, "paper", "real_data_local_support.png"),
+        os.path.join(root, "paper", "real_data_local_support.pdf")
     ]
+    target_paper = "/Users/ivanpetej/Projects/va-width-experiments/paper"
+    if os.path.exists(target_paper) and target_paper != os.path.join(root, "paper"):
+        fig6_paths.extend([
+            os.path.join(target_paper, "real_data_local_support.png"),
+            os.path.join(target_paper, "real_data_local_support.pdf")
+        ])
     plot_figure_6(df_thinning, fig6_paths)
 
     datasets = ["adult", "bank", "spambase"]
     df_reverse = run_or_load_reverse(datasets, seed=42, B_model=100)
 
     fig7_paths = [
-        "paper/training_support_epistemic.png",
-        "paper/training_support_epistemic.pdf",
-        "/Users/ivanpetej/Projects/va-width-experiments/paper/training_support_epistemic.png",
-        "/Users/ivanpetej/Projects/va-width-experiments/paper/training_support_epistemic.pdf"
+        os.path.join(root, "paper", "training_support_epistemic.png"),
+        os.path.join(root, "paper", "training_support_epistemic.pdf")
     ]
+    if os.path.exists(target_paper) and target_paper != os.path.join(root, "paper"):
+        fig7_paths.extend([
+            os.path.join(target_paper, "training_support_epistemic.png"),
+            os.path.join(target_paper, "training_support_epistemic.pdf")
+        ])
     plot_figure_7(df_reverse, fig7_paths)
-    print("Replotting complete!")
+    print("Plotting complete for Figures 6 and 7.")
+
+if __name__ == "__main__":
+    main()

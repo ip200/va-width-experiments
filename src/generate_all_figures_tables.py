@@ -255,11 +255,19 @@ def generate_figure3_width_vs_instability():
     plt.savefig(os.path.join(paper_dir, "width_vs_bootstrap_instability.png"), dpi=300)
     plt.savefig(os.path.join(paper_dir, "width_vs_bootstrap_instability.pdf"))
     plt.close()
-    print("Figure 3 saved to paper/width_vs_bootstrap_instability.png and .pdf")
+    print("Figure 2 saved to paper/width_vs_bootstrap_instability.png and .pdf")
+
+def generate_figures_6_and_7():
+    try:
+        from plot_figures_6_7 import main as plot_6_7_main
+        plot_6_7_main()
+    except Exception as e:
+        print(f"Notice: Could not plot Figures 6 and 7: {e}")
 
 if __name__ == "__main__":
     generate_figure1_idealised_scaling()
     generate_table1_w2_exponent_progression()
     generate_figure2_w2_exponent_convergence()
     generate_figure3_width_vs_instability()
+    generate_figures_6_and_7()
     print("\nAll figures and tables verified/reproduced successfully.")

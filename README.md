@@ -62,7 +62,7 @@ va-width-experiments/
 ├── src/                    # Modular Python experiment and plotting scripts
 │   ├── utils.py                        # Common statistical utilities and data generators
 │   ├── real_data_calibration_support.py # Primary real-data experiments (Adult, Bank, Spambase)
-│   ├── replot_figures_6_7.py           # Publication rendering for Figures 6 and 7
+│   ├── plot_figures_6_7.py             # Publication rendering for Figures 6 and 7
 │   ├── scaling_laws_experiment.py       # 1D controlled synthetic scaling experiments
 │   ├── run_experiment_w2_convergence.py # Multivariate exponent convergence (n up to 32,000)
 │   ├── non_monotonic_experiments.py    # Score invariance & non-monotonic slope regimes
@@ -117,11 +117,11 @@ You can reproduce all paper artifacts in two ways:
 To regenerate all figures and LaTeX tables directly from the experimental datasets:
 
 ```bash
-# 1. Regenerate Figures 2, 3, 4, Table 1 from precomputed data
+# Option A: Regenerate all figures and tables in a single command (~5s)
 python src/generate_all_figures_tables.py
 
-# 2. Regenerate Figures 6 and 7 (Real-Data Thinning & Reverse Intervention)
-python src/replot_figures_6_7.py
+# Option B: Regenerate Figures 6 and 7 specifically
+python src/plot_figures_6_7.py
 ```
 
 ---
@@ -217,8 +217,8 @@ python src/calibration_comparison.py
 | **Figure 3** | Sample-Size Scaling Laws ($n^{-2/3}, n^{-1/3}$) | `scaling_laws_experiment.py` | `SCALING_IDEALISED.csv` | `paper/idealised_scaling_laws.png` |
 | **Figure 4** | Exponent Convergence across $n$ | `run_experiment_w2_convergence.py` | `proposition1_convergence.csv` | `paper/w2_exponent_convergence.png` |
 | **Figure 5** | Non-Monotonic & Cusp Scaling Regimes | `non_monotonic_experiments.py` | Synthetic generation | `paper/non_monotonic_scaling_laws.png` |
-| **Figure 6** | Real-Data Calibration Support Thinning | `replot_figures_6_7.py` | `REAL_DATA_RESULTS.csv` | `paper/real_data_local_support.png` |
-| **Figure 7** | Reverse Training Support Intervention | `replot_figures_6_7.py` | `REVERSE_INTERVENTION_RESULTS.csv` | `paper/training_support_epistemic.png` |
+| **Figure 6** | Real-Data Calibration Support Thinning | `plot_figures_6_7.py` | `REAL_DATA_RESULTS.csv` | `paper/real_data_local_support.png` |
+| **Figure 7** | Reverse Training Support Intervention | `plot_figures_6_7.py` | `REVERSE_INTERVENTION_RESULTS.csv` | `paper/training_support_epistemic.png` |
 | **Figure 8** | Alternative Calibration Comparison (IR/PS/HB) | `calibration_comparison.py` | Synthetic generation | `paper/calibration_uncertainty_bootstrap.png` |
 | **Table 1** | Exponent Progression across $n$ | `run_experiment_w2_convergence.py` | `proposition1_convergence.csv` | `paper/table_w2_exponent_progression.tex` |
 | **Table 2** | CIFAR Crowd Simulation Correlations | `calibration_comparison.py` | Synthetic embeddings | `paper/table_cifar_correlations.tex` |
