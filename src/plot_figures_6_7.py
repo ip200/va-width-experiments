@@ -96,7 +96,7 @@ def plot_figure_6(df_thinning, paper_dir):
     ax3.set_ylabel(r"Base model epistemic SD $E_{\mathrm{model}}$")
     ax3.set_title(r"(c) Base-model uncertainty (invariant)")
     ax3.invert_xaxis()
-    ax3.set_ylim(0.035, 0.13)
+    ax3.set_ylim(0.035, 0.15)
     ax3.legend(loc="center right", framealpha=0.9)
 
     plt.tight_layout()

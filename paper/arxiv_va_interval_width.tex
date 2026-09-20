@@ -33,24 +33,24 @@
 	\maketitle
 	
 	\begin{abstract}
-		Venn--Abers predictors return two calibrated probabilities, $p_0$ and $p_1$, but the interpretation of the interval width $w=p_1-p_0$ has remained unclear. In this paper we study the width through the local block structure of isotonic regression. We show that it is closely related to the inverse effective size of the local PAV block and derive scaling relationships with calibration sample size, score density, label variability, and the slope of the underlying probability curve. The results suggest that Venn--Abers width is primarily a measure of local calibration support rather than a general measure of predictive uncertainty. Controlled scaling experiments recover the predicted behaviour, while bootstrap and crowd-annotation experiments show a much stronger relationship with calibration instability than with label ambiguity. Real-data experiments on three public tabular benchmarks (UCI Adult, UCI Bank Marketing, and UCI Spambase) support this interpretation: deliberately thinning local calibration support monotonically inflates Venn--Abers width and calibration instability while base-model uncertainty is held fixed. In quantitative uncertainty decompositions, Venn--Abers width provides an additional statistically detectable contribution to explaining calibration instability beyond outcome ambiguity and base-model uncertainty ($\Delta R^2 > 0$). These results support the interpretation that Venn--Abers width primarily reflects local calibration support, representing a calibration-specific component of epistemic uncertainty associated with finite local calibration data.
+		Venn--Abers predictors return two probability values with Venn validity guarantees, $p_0$ and $p_1$, but the interpretation of the interval width $w=p_1-p_0$ has remained unclear. In this paper we study the width through the local block structure of isotonic regression. We show that it is closely related to the inverse effective size of the local PAV block and derive scaling relationships with calibration sample size, score density, label variability, and the slope of the underlying probability curve. The results suggest that Venn--Abers width is primarily a measure of local calibration support rather than a general measure of predictive uncertainty. Controlled scaling experiments recover the predicted behaviour, while bootstrap and crowd-annotation experiments show a much stronger relationship with calibration instability than with label ambiguity. Real-data experiments on three public tabular benchmarks (UCI Adult, UCI Bank Marketing, and UCI Spambase) support this interpretation: deliberately thinning local calibration support monotonically inflates Venn--Abers width and calibration instability while base-model uncertainty is held fixed. In quantitative uncertainty decompositions, Venn--Abers width provides an additional statistically detectable contribution to explaining calibration instability beyond outcome ambiguity and base-model uncertainty ($\Delta R^2 > 0$). These results support the interpretation that Venn--Abers width primarily reflects local calibration support, representing a calibration-specific component of epistemic uncertainty associated with finite local calibration data.
 	\end{abstract}
 
 	% ============================================================
 \section{Introduction}
 	\label{sec:intro}
 
-	Venn--Abers predictors (VAPs) \cite{vovk2014, vovk2015} are conformal calibration algorithms for binary classification that map a scalar scoring rule $s = g(x)$ to a pair of well-calibrated probabilities,
+	Venn--Abers predictors (VAPs) \cite{vovk2014, vovk2015} are probabilistic calibration methods based on the Venn prediction framework. For binary classification they map a scalar scoring rule $s = g(x)$ to a pair of probability values with Venn validity guarantees,
 	\begin{equation}
 		p_0(s),\qquad p_1(s),
 		\label{eq:p0_p1}
 	\end{equation}
-	obtained by fitting isotonic regression after hypothetically augmenting a calibration sample of size $n$ with the test instance under labels $y=0$ and $y=1$, respectively. From this pair, the calibrated point prediction is defined as the midpoint
+	obtained by fitting isotonic regression after hypothetically augmenting a calibration sample of size $n$ with the test instance under labels $y=0$ and $y=1$, respectively. For empirical analyses requiring a single scalar summary, we use the midpoint
 	\begin{equation}
 		\hat p(s)=\frac{p_0(s)+p_1(s)}{2},
 		\label{eq:phat_def}
 	\end{equation}
-	and the Venn--Abers interval width is
+	The Venn validity guarantee attaches to the multiprobability pair $(p_0,p_1)$ rather than to this arithmetic midpoint; the standard log-loss merge $p_{\mathrm{VA}}=p_1/(1-p_0+p_1)$ is a distinct point predictor \cite{vovk2015}. The Venn--Abers interval width is
 	\begin{equation}
 		w_n(s)=p_1(s)-p_0(s).
 		\label{eq:wn_def}
@@ -83,7 +83,7 @@
 		U_{{\rm cal},n}(s) = \sqrt{\hat p(s)(1-\hat p(s))\,w_n(s)},
 		\label{eq:intro_ucal}
 	\end{equation}
-	which has the predicted isotonic $n^{-1/3}$ scale. We use this quantity as an index of calibration instability rather than as an exact standard error. We refer primarily to this quantity as local calibration support or leverage. In the usual aleatoric--epistemic terminology, it can be viewed as a calibration-specific component of epistemic uncertainty arising from finite local calibration information.
+	which has the predicted isotonic $n^{-1/3}$ scale. We use this quantity as an index of calibration instability rather than as an exact standard error. We refer primarily to the interval width $w_n$ as local calibration leverage, or equivalently inverse effective calibration support. In the usual aleatoric--epistemic terminology, the uncertainty represented by the width can be viewed as a calibration-specific component of epistemic uncertainty arising from finite local calibration information.
 
 	We test these relationships in a number of experiments. These include monotonic and non-monotonic synthetic examples, bootstrap resampling, a crowd-annotation simulation, and controlled local support interventions on three real-world tabular benchmarks (UCI Adult, UCI Bank Marketing, and UCI Spambase). We also increase the calibration sample size to check whether the finite-sample density, ambiguity, and slope coefficients move towards the values suggested by the scaling argument. The results are broadly consistent with the proposed interpretation. In the real-data experiments, thinning local calibration support increases Venn--Abers width and pointwise calibration instability while base-model epistemic uncertainty is held fixed by construction. In quantitative decompositions across held-out test points, outcome ambiguity explains baseline Bernoulli variability, while Venn--Abers width provides an additional statistically detectable contribution across all three datasets ($\Delta R^2 = +\AdultDeltaRsq{}$ on Adult, $+\BankDeltaRsq{}$ on Bank, and $+\SpambaseDeltaRsq{}$ on Spambase; all 95\% bootstrap CIs exclude zero), consistent with width capturing calibration-support information distinct from outcome ambiguity and base-model bootstrap variability.
 
@@ -123,11 +123,11 @@
 		\item If the true label of $x$ were $1$, we insert the pair $(s, 1)$ into the calibration sequence, sort, and fit PAV. Let $p_1(s)$ be the calibrated probability assigned to $s$ under this mapping.
 	\end{enumerate}
 	
-	The Venn--Abers predictor outputs the interval $[p_0(s), p_1(s)]$. By construction, $p_0(s) \le p_1(s)$. As introduced in Section~\ref{sec:intro}, the calibrated point prediction $\hat{p}(s)$ and the interval width $w_n(s)$ are:
+	The Venn--Abers predictor outputs the interval $[p_0(s), p_1(s)]$. By construction, $p_0(s) \le p_1(s)$. As introduced in Section~\ref{sec:intro}, for empirical analyses we summarize the pair by the midpoint $\hat{p}(s)$, while the interval width is $w_n(s)$:
 	\begin{equation}
 		\hat{p}(s) = \frac{p_0(s) + p_1(s)}{2}, \quad w_n(s) = p_1(s) - p_0(s).
 	\end{equation}
-	The pair $(p_0(s), p_1(s))$ is part of the multiprobabilistic validity construction of Venn--Abers predictors \cite{vovk2015}. It should not be interpreted as a classical confidence interval for an unknown Bernoulli probability. All of our experiments were carried out using the open-source \texttt{venn-abers} Python package library \cite{vennaberspkg}.
+	The pair $(p_0(s), p_1(s))$ is part of the multiprobabilistic validity construction of Venn--Abers predictors \cite{vovk2015}. It should not be interpreted as a classical confidence interval for an unknown Bernoulli probability. The experiments use the open-source \texttt{venn-abers} Python package \cite{vennaberspkg} directly, or an accelerated implementation that is tested for numerical equivalence to the package on continuous, tied, and bootstrap-resampled scores.
 	
 	% ============================================================
 	\section{Theory: Asymptotic Scaling Laws of Venn--Abers Intervals}
@@ -302,10 +302,10 @@
 	
 	We interpret the width therefore as a local sensitivity or leverage property generated by the calibration procedure, decomposed structurally as:
 	\begin{equation}
-		w_n(s) \;\sim\; \underbrace{n^{-2/3}f(s)^{-2/3}}_{\text{calibration support}} \;\times\; \underbrace{v(s)^{-1/3}}_{\text{outcome variability}} \;\times\; \underbrace{[\theta'(s)]^{2/3}}_{\text{local geometry}}.
+		w_n(s) \;\sim\; \underbrace{n^{-2/3}f(s)^{-2/3}}_{\text{calibration leverage (inverse support)}} \;\times\; \underbrace{v(s)^{-1/3}}_{\text{outcome variability}} \;\times\; \underbrace{[\theta'(s)]^{2/3}}_{\text{local geometry}}.
 		\label{eq:scaling_decomp}
 	\end{equation}
-	Width is thus not one of the conventional predictive uncertainty components: it is an empirical sensitivity measure arising from the calibration step, influenced by score-conditional outcome noise but fundamentally distinct from it. We refer primarily to this quantity as local calibration support or leverage. In the conventional aleatoric--epistemic taxonomy, it can be viewed as a calibration-specific component of epistemic uncertainty arising from finite local calibration data. Equation~\ref{eq:ucal} incorporates the score-conditional outcome variance $v(s)$ back into the expression when the quantity of interest is probability-scale instability.
+	Width is thus not one of the conventional predictive uncertainty components: it is an empirical sensitivity measure arising from the calibration step, influenced by score-conditional outcome noise but fundamentally distinct from it. We refer primarily to the width as local calibration leverage, or equivalently inverse effective calibration support. In the conventional aleatoric--epistemic taxonomy, it can be viewed as a calibration-specific component of epistemic uncertainty arising from finite local calibration data. Equation~\ref{eq:ucal} incorporates the score-conditional outcome variance $v(s)$ back into the expression when the quantity of interest is probability-scale instability.
 	
 	\subsection{Non-Monotonicity and Alternative Scaling Regimes}
 	\label{subsec:non_monotonic_theory}
@@ -353,9 +353,9 @@
 	\subsection{Synthetic Data Generation}
 	We distinguish three controlled synthetic experimental protocols to validate different aspects of the asymptotic theory:
 	\begin{enumerate}
-		\item \textbf{Idealised Sample-Size Scaling (Figure~\ref{fig:idealised_scaling}):} To test the pure sample-size scaling exponents ($-2/3$ for interval width, $-1/3$ for pointwise standard deviation and $U_{\mathrm{cal}}$), we generate scores $S \sim U[0, 1]$ under a standard sigmoidal probability curve $\theta(s) = 1/(1 + \exp(-4(s - 0.5)))$. We evaluate the interval width $w_n(s_0)$ at a fixed interior test point $s_0 = 0.5$ across sample sizes $n \in [100, 20{,}000]$ using $R = 200$ independent Monte Carlo repetitions per sample size.
-		\item \textbf{Multivariate Asymptotic Scaling ($W_2$ Factorial Design, Table~\ref{tab:exponent_convergence} and Equation~\ref{eq:pooled_w2}):} To verify the joint dependency on score density $f(s)$, Bernoulli variance $v(s) = \theta(s)(1 - \theta(s))$, and curve derivative $\theta'(s)$ in Equation~\ref{eq:scaling_law_final}, we conduct a comprehensive simulation across four score density families (uniform, Gaussian, symmetric Beta, and asymmetric Beta), six probability curves $\theta(s)$ (linear, moderate sigmoid, sharp sigmoid, quadratic, cubic, and sinusoidal), and 14 interior evaluation scores $s \in [-0.65, 0.65]$ across sample sizes $n \in [500, 100{,}000]$.
-		\item \textbf{Non-Monotonic Geometric Regimes (Figure~\ref{fig:non_monotonic_scaling_laws}):} To evaluate the asymptotic impact of monotonicity violations and zero derivatives derived in Section~\ref{sec:theory}, we evaluate scores $S \sim U[-1, 1]$ under the four geometric regimes (monotonic, violating, interior extremum, and flat boundary extremum) across sample sizes $n \in [100, 5{,}000]$.
+		\item \textbf{Idealised Sample-Size Scaling (Figure~\ref{fig:idealised_scaling}):} To test the pure sample-size scaling exponents ($-2/3$ for interval width and $-1/3$ for pointwise standard deviation and $U_{\mathrm{cal}}$), we generate scores $S \sim U[0,1]$ with $Y\mid S=s\sim\operatorname{Bernoulli}(0.2+0.6s)$. We evaluate a fixed interior score $s_0=0.5$ at calibration sizes $n\in\{500,1000,2000,4000,8000,16000,32000\}$ using $R=200$ independent Monte Carlo repetitions per sample size.
+		\item \textbf{Multivariate Asymptotic Scaling ($W_2$ Factorial Design, Table~\ref{tab:exponent_convergence} and Equation~\ref{eq:pooled_w2}):} To verify the joint dependence on score density $f(s)$, Bernoulli variance $v(s)=\theta(s)(1-\theta(s))$, and curve derivative $\theta'(s)$ in Equation~\ref{eq:scaling_law_final}, we use four score-density families (uniform, centered truncated Gaussian, shifted truncated Gaussian, and asymmetric Beta), six monotone probability curves (four sigmoidal variants and two power curves), and 14 interior evaluation scores $s\in[-0.65,0.65]$. We evaluate calibration sizes $n\in\{500,1000,2000,4000,8000,16000,32000\}$, with the number of Monte Carlo repetitions decreasing from eight at the smaller sizes to two at $n=32000$.
+		\item \textbf{Non-Monotonic Geometric Regimes (Figure~\ref{fig:non_monotonic_scaling_laws}):} To evaluate the effect of monotonicity violations and higher-order local geometry, we use scores $S\sim U[-1,1]$ under four regimes: regular monotonic, globally decreasing, a middle-peak monotonicity violation, and an order-two monotone flat/cusp regime. We use calibration sizes $n\in\{100,200,400,800,1600,3200\}$ with $R=500$ Monte Carlo repetitions per size.
 	\end{enumerate}
 	
 
@@ -394,43 +394,27 @@
 	
 	We first compare interval width with the variability obtained by repeatedly drawing a new calibration sample from the same distribution.
 	
-	\begin{table}[ht]
-		\centering
-		\caption{Calibration resampling analysis across calibration set sizes ($n_{\text{cal}}$). We report the mean interval width, the standard deviation of point predictions across resamples, their correlation, and the Brier score on a fresh test set.}
-		\label{tab:calibration_resampling}
-		\vspace{8pt}
-		\begin{tabular}{rcccc}
-			\toprule
-			$n_{\text{cal}}$ & Mean Width & Mean SD Across Resamples & Corr(width, SD) & Fresh Brier \\
-			\midrule
-			100 & 0.1564 & 0.1131 & 0.9127 & 0.1236 \\
-			250 & 0.1045 & 0.1118 & 0.8603 & 0.1234 \\
-			500 & 0.0658 & 0.0990 & 0.7802 & 0.1197 \\
-			1000 & 0.0423 & 0.0774 & 0.8520 & 0.1197 \\
-			2000 & 0.0261 & 0.0586 & 0.8779 & 0.1161 \\
-			\bottomrule
-		\end{tabular}
-	\end{table}
+	\input{table_calibration_resampling.tex}
 	
-	Table~\ref{tab:calibration_resampling} shows that both quantities decrease as the calibration set becomes larger. The correlation between width and resampling SD is also high for most of the calibration sizes, generally between about 0.85 and 0.91.
+	Table~\ref{tab:calibration_resampling} shows that both quantities decrease as the calibration set becomes larger. The correlation between width and resampling SD is high across all calibration sizes in this experiment, ranging from about 0.92 to 0.97.
 	
-	We next look at individual test points. Equation~\ref{eq:variance_width_relation} suggests that raw width alone is not on the same scale as the standard deviation of the calibrated probability, since the Bernoulli variance also enters the calculation. In a classifier-based bootstrap experiment at $N = 500$, the index $U_{\mathrm{cal}}=\sqrt{\hat p(1-\hat p)w}$ has Pearson correlation $0.5300$ with bootstrap SD, compared with $0.4287$ for raw width. The corresponding Spearman correlations are $0.4247$ and $0.4072$. In a held-out multiplicative fit, the mean absolute error falls from $0.0627$ for width to $0.0389$ for $U_{\mathrm{cal}}$. The results suggest that $U_{\mathrm{cal}}$ is a better probability-scale summary than width alone in this experiment. We do not use either quantity as an exact pointwise standard error.
+	We next look at individual test points. Equation~\ref{eq:variance_width_relation} suggests that raw width alone is not on the same scale as the standard deviation of the calibrated probability, since the Bernoulli variance also enters the calculation. In a classifier-based bootstrap experiment at $N = 500$, the index $U_{\mathrm{cal}}=\sqrt{\hat p(1-\hat p)w}$ has Pearson correlation $\UCalPearson{}$ with bootstrap SD, compared with $\WidthPearson{}$ for raw width. The corresponding Spearman correlations are $\UCalSpearman{}$ and $\WidthSpearman{}$. In a held-out multiplicative fit, the mean absolute error falls from $\WidthMAE{}$ for width to $\UCalMAE{}$ for $U_{\mathrm{cal}}$. The results suggest that $U_{\mathrm{cal}}$ is a better probability-scale summary than width alone in this experiment. We do not use either quantity as an exact pointwise standard error.
 	
 	\begin{figure}[htbp]
 		\centering
 		\includegraphics[width=0.92\textwidth]{width_vs_bootstrap_instability.png}
-		\caption{Pointwise comparison of Venn--Abers interval width and probability-scale calibration instability in the classifier-based bootstrap experiment ($N_{\mathrm{cal}}=500$, $M=200$ resamples). Panel~(a) compares raw width $w$ with bootstrap standard deviation $\sigma_{\text{boot}}$ (Pearson $r = 0.4287$, Spearman $\rho = 0.4072$). Panel~(b) compares the calibration instability index $U_{\text{cal}}=\sqrt{\hat p(1-\hat p)w}$ with bootstrap standard deviation (Pearson $r = 0.5300$, Spearman $\rho = 0.4247$). In a held-out multiplicative fit, the mean absolute error is reduced from $0.0627$ for width to $0.0389$ for $U_{\text{cal}}$.}
+		\caption{Pointwise comparison of Venn--Abers interval width and probability-scale calibration instability in the classifier-based bootstrap experiment ($N_{\mathrm{cal}}=500$, $M=200$ resamples). Panel~(a) compares raw width $w$ with bootstrap standard deviation $\sigma_{\text{boot}}$ (Pearson $r = \WidthPearson{}$, Spearman $\rho = \WidthSpearman{}$). Panel~(b) compares the calibration instability index $U_{\text{cal}}=\sqrt{\hat p(1-\hat p)w}$ with bootstrap standard deviation (Pearson $r = \UCalPearson{}$, Spearman $\rho = \UCalSpearman{}$). In a held-out multiplicative fit, the mean absolute error is reduced from $\WidthMAE{}$ for width to $\UCalMAE{}$ for $U_{\mathrm{cal}}$.}
 		\label{fig:width_vs_bootstrap_instability}
 	\end{figure}
 
 	\subsection{Empirical Verification of Scaling Laws}
 	
-	We first check the sample-size rates in a simple classifier-free experiment. We generate $S\sim U(0,1)$ and $Y\mid S=s\sim\operatorname{Bernoulli}(0.2+0.6s)$, and evaluate a fixed interior score $s_0=0.5$ over increasing calibration sizes. The fitted log--log slope of mean width is $-0.6390$ (95\% CI $[-0.6768,-0.6012]$), compared with the predicted $-2/3$. The bootstrap standard deviation of the calibrated probability has slope $-0.3172$ (95\% CI $[-0.3273,-0.3072]$), close to the isotonic $-1/3$ rate, while $U_{\mathrm{cal}}$ has slope $-0.3285$ (95\% CI $[-0.3426,-0.3144]$), whose interval contains $-1/3$. The bootstrap-SD confidence interval does not contain the exact theoretical exponent, so we interpret this result as close finite-sample agreement rather than exact confirmation.
+	We first check the sample-size rates in a simple classifier-free experiment. We generate $S\sim U(0,1)$ and $Y\mid S=s\sim\operatorname{Bernoulli}(0.2+0.6s)$, and evaluate a fixed interior score $s_0=0.5$ over increasing calibration sizes. The fitted log--log slope of mean width is $\IdealWidthSlope{}$ (95\% CI $[\IdealWidthCILow{},\IdealWidthCIHigh{}]$), compared with the predicted $-2/3$. The standard deviation of the calibrated midpoint across Monte Carlo calibration samples has slope $\IdealSDSlope{}$ (95\% CI $[\IdealSDCILow{},\IdealSDCIHigh{}]$), while $U_{\mathrm{cal}}$ has slope $\IdealUCalSlope{}$ (95\% CI $[\IdealUCalCILow{},\IdealUCalCIHigh{}]$). All three confidence intervals contain their corresponding theoretical exponents, so in this controlled experiment the observed rates are consistent with the proposed $n^{-2/3}$ and $n^{-1/3}$ scalings.
 	
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.9\textwidth]{idealised_scaling_laws.png}
-\caption{Idealised scaling of Venn--Abers interval width and probability-scale calibration instability. Panel (a) shows the mean interval width as a function of calibration size, together with the predicted $n^{-2/3}$ reference rate. Panel (b) shows the bootstrap standard deviation of the calibrated probability and $U_{\mathrm{cal}}=\sqrt{\hat p(1-\hat p)w}$, together with the predicted $n^{-1/3}$ reference rate. The fitted slopes are $-0.6390$ for width, $-0.3172$ for bootstrap standard deviation, and $-0.3285$ for $U_{\mathrm{cal}}$.}
+\caption{Idealised scaling of Venn--Abers interval width and probability-scale calibration instability. Panel (a) shows the mean interval width as a function of calibration size, together with the predicted $n^{-2/3}$ reference rate. Panel (b) shows the bootstrap standard deviation of the calibrated probability and $U_{\mathrm{cal}}=\sqrt{\hat p(1-\hat p)w}$, together with the predicted $n^{-1/3}$ reference rate. The fitted slopes are $\IdealWidthSlope{}$ for width, $\IdealSDSlope{}$ for the standard deviation of the calibrated midpoint, and $\IdealUCalSlope{}$ for $U_{\mathrm{cal}}$.}
 \label{fig:idealised_scaling}
 \end{figure}
 	
@@ -482,10 +466,10 @@
 	\paragraph{2. Density Scaling under Non-Monotonicity:}
 	Next, we study how the interval width scaling law varies when the monotonicity assumption is violated. We run calibration over sizes $N \in [100, 3200]$ across four distinct slope regimes at a fixed test point $s_{\text{test}} = 0.0$ (which corresponds to the center of the score support where the designed local extrema and flat inflection points are situated):
 	\begin{itemize}
-		\item \textbf{Regime A (Standard Monotonic):} $\theta(s) = 0.5 + 0.3 s$ (positive slope $\theta' = 0.3$). The empirical exponent of width vs $N$ is $-0.660$, matching the theoretical exponent of $-2/3 \approx -0.667$.
-		\item \textbf{Regime B (Monotonicity-Violating):} $\theta(s) = 0.5 - 0.3 s$ (negative slope $\theta' = -0.3$). Because the probability decreases, the PAV algorithm merges all points into a single block containing a non-vanishing fraction of the $N$ calibration observations. The empirical exponent is $-1.004$, matching the theoretical value of $-1.000$.
-		\item \textbf{Regime C (Local Extremum with Violation):} $\theta(s) = 0.5 - 0.4 s^2$ on $s \in [-1, 1]$ (parabolic middle peak, $\theta'(0) = 0$). Here, the right half ($s > 0$) decreases, violating monotonicity and forcing a macroscopic merge. The peak at $s=0.0$ is merged into this violating block, and the empirical exponent is $-1.097$, aligning with the $-1.000$ limit.
-		\item \textbf{Regime D (Order-Two Flat/Cusp Regime):} $\theta(s) = 0.5 + 0.4 s^2 \operatorname{sign}(s)$ on $s \in [-1, 1]$. The function is monotone and has local change of order $|s|^2$, but it is not twice differentiable at the origin. Equation~\ref{eq:general_order_scaling} with $\alpha=2$ therefore predicts the $-4/5$ sample-size exponent. The empirical exponent is $-0.802$, close to $-4/5=-0.800$. A smooth monotone cubic flat point would instead correspond to $\alpha=3$ and the $-6/7$ rate.
+		\item \textbf{Regime A (Standard Monotonic):} $\theta(s) = 0.5 + 0.3 s$ (positive slope $\theta' = 0.3$). The empirical exponent of width vs $N$ is $\NonMonoRegimeASlope{}$, matching the theoretical exponent of $-2/3 \approx -0.667$.
+		\item \textbf{Regime B (Monotonicity-Violating):} $\theta(s) = 0.5 - 0.3 s$ (negative slope $\theta' = -0.3$). Because the probability decreases, the PAV algorithm merges all points into a single block containing a non-vanishing fraction of the $N$ calibration observations. The empirical exponent is $\NonMonoRegimeBSlope{}$, matching the theoretical value of $-1.000$.
+		\item \textbf{Regime C (Local Extremum with Violation):} $\theta(s) = 0.5 - 0.4 s^2$ on $s \in [-1, 1]$ (parabolic middle peak, $\theta'(0) = 0$). Here, the right half ($s > 0$) decreases, violating monotonicity and forcing a macroscopic merge. The peak at $s=0.0$ is merged into this violating block, and the empirical exponent is $\NonMonoRegimeCSlope{}$, aligning with the $-1.000$ limit.
+		\item \textbf{Regime D (Order-Two Flat/Cusp Regime):} $\theta(s) = 0.5 + 0.4 s^2 \operatorname{sign}(s)$ on $s \in [-1, 1]$. The function is monotone and has local change of order $|s|^2$, but it is not twice differentiable at the origin. Equation~\ref{eq:general_order_scaling} with $\alpha=2$ therefore predicts the $-4/5$ sample-size exponent. The empirical exponent is $\NonMonoRegimeDSlope{}$, close to $-4/5=-0.800$. A smooth monotone cubic flat point would instead correspond to $\alpha=3$ and the $-6/7$ rate.
 	\end{itemize}
 	These scaling regimes are shown in Figure~\ref{fig:non_monotonic_scaling_laws}.
 	
@@ -512,8 +496,8 @@
 	
 	Table~\ref{tab:cifar_correlations} gives the macro-averaged correlations. The pattern is different for calibration instability and for the two ambiguity measures:
 	\begin{itemize}
-		\item The VAP interval width has a positive correlation with \textbf{Bootstrap Instability} (Pearson $\approx 0.69$, Spearman $\approx 0.53$). This suggests that wider intervals tend to occur for test points for which the calibrated probability is more sensitive to the particular finite calibration sample drawn.
-		\item Conversely, the VAP interval width has a near-zero or slightly negative correlation with \textbf{Annotator Disagreement} (Pearson $\approx 0.013$, Spearman $\approx -0.008$) and \textbf{Annotator Entropy} (Pearson $\approx 0.016$, Spearman $\approx -0.008$). 
+		\item The VAP interval width has a positive correlation with \textbf{Bootstrap Instability} (Pearson $\approx \CifarBootPearson{}$, Spearman $\approx \CifarBootSpearman{}$). This suggests that wider intervals tend to occur for test points for which the calibrated probability is more sensitive to the particular finite calibration sample drawn.
+		\item Conversely, the VAP interval width has essentially zero correlation with \textbf{Annotator Disagreement} (Pearson $\approx \CifarDisPearson{}$, Spearman $\approx \CifarDisSpearman{}$) and \textbf{Annotator Entropy} (Pearson $\approx \CifarEntPearson{}$, Spearman $\approx \CifarEntSpearman{}$). 
 	\end{itemize}
 	In this experiment width is therefore related to finite-sample calibration sensitivity, while there is almost no relationship with either annotator disagreement or entropy.
 
@@ -533,13 +517,13 @@
 
 	The empirical results provide direct support for the theoretical framework:
 	\begin{enumerate}
-		\item \textbf{Venn--Abers Width Responds Monotonically to Calibration Support:} As the retained fraction of calibration observations in the local neighbourhood decreases from 100\% to 12.5\%, the mean Venn--Abers width increases monotonically across all three datasets (Panel~a). On UCI Adult, mean width rises from $0.0051$ to $0.0278$; on UCI Bank Marketing, from $0.0050$ to $0.0381$; and on UCI Spambase, from $0.0734$ to $0.2079$.
-		\item \textbf{Calibration Instability Strongly Corresponds to Width:} As local calibration support is removed, the empirical bootstrap standard deviation of the calibrated probabilities ($\sigma_{\mathrm{cal}}$) exhibits an identical upward progression (Panel~b), rising from $0.0243$ to $0.0442$ on Adult, from $0.0289$ to $0.0558$ on Bank Marketing, and from $0.0671$ to $0.0898$ on Spambase.
-		\item \textbf{Base-Model Uncertainty Control:} Panel~(c) displays the base-model epistemic uncertainty $E_{\mathrm{model}}(x)$. Because the base model and training data are held fixed, estimated base-model epistemic uncertainty is unchanged by construction ($0.0424$ on Adult, $0.0559$ on Bank, and $0.1169$ on Spambase). This isolates the response of width to changes in calibration support, verifying that the empirical inflation in width and calibration instability is not confounded by base-model variation.
+		\item \textbf{Venn--Abers Width Responds Monotonically to Calibration Support:} As the retained fraction of calibration observations in the local neighbourhood decreases from 100\% to 12.5\%, the mean Venn--Abers width increases monotonically across all three datasets (Panel~a). On UCI Adult, mean width rises from $\AdultWidthStart{}$ to $\AdultWidthEnd{}$; on UCI Bank Marketing, from $\BankWidthStart{}$ to $\BankWidthEnd{}$; and on UCI Spambase, from $\SpambaseWidthStart{}$ to $\SpambaseWidthEnd{}$.
+		\item \textbf{Calibration Instability Strongly Corresponds to Width:} As local calibration support is removed, the empirical bootstrap standard deviation of the calibrated probabilities ($\sigma_{\mathrm{cal}}$) exhibits an identical upward progression (Panel~b), rising from $\AdultSigmaCalStart{}$ to $\AdultSigmaCalEnd{}$ on Adult, from $\BankSigmaCalStart{}$ to $\BankSigmaCalEnd{}$ on Bank Marketing, and from $\SpambaseSigmaCalStart{}$ to $\SpambaseSigmaCalEnd{}$ on Spambase.
+		\item \textbf{Base-Model Uncertainty Control:} Panel~(c) displays the base-model epistemic uncertainty $E_{\mathrm{model}}(x)$. Because the base model and training data are held fixed, estimated base-model epistemic uncertainty is unchanged by construction ($\AdultEModel{}$ on Adult, $\BankEModel{}$ on Bank, and $\SpambaseEModel{}$ on Spambase). This isolates the response of width to changes in calibration support, verifying that the empirical inflation in width and calibration instability is not confounded by base-model variation.
 	\end{enumerate}
 
 	\paragraph{Reverse Intervention: Manipulating Training Support.}
-	In the reverse intervention, we hold the calibration set fixed and subsample the training partition from 100\% down to 25\%. As shown in Figure~\ref{fig:training_support_epistemic}, decreasing training support systematically inflates base-model epistemic uncertainty $E_{\mathrm{model}}$ (Panel~a, increasing from $0.0225$ to $0.0591$ on Adult, from $0.0284$ to $0.0890$ on Bank, and from $0.0000$ to $0.1396$ on Spambase). In contrast, Venn--Abers interval width is considerably less responsive to reduced training support than base-model bootstrap variability, particularly on Adult (Panel~b, shifting marginally from $0.0112$ to $0.0075$) and Bank ($0.0123$ to $0.0121$). Some change in width remains visible on Spambase ($0.0587$ to $0.0429$) because retraining the base predictor changes the score function $g(x)$, altering the positions and ranking of calibration points even though the calibration instances themselves are fixed. These results illustrate that Venn--Abers width is primarily sensitive to calibration data support rather than base-model training set size.
+	In the reverse intervention, we hold the calibration set fixed and subsample the training partition from 100\% down to 25\%. As shown in Figure~\ref{fig:training_support_epistemic}, decreasing training support systematically inflates base-model epistemic uncertainty $E_{\mathrm{model}}$ (Panel~a, increasing from $\AdultRevEModelStart{}$ to $\AdultRevEModelEnd{}$ on Adult, from $\BankRevEModelStart{}$ to $\BankRevEModelEnd{}$ on Bank, and from $\SpambaseRevEModelStart{}$ to $\SpambaseRevEModelEnd{}$ on Spambase). In contrast, Venn--Abers interval width changes much less on Adult (Panel~b, from $\AdultRevWidthStart{}$ to $\AdultRevWidthEnd{}$) and Bank (from $\BankRevWidthStart{}$ to $\BankRevWidthEnd{}$). A larger secondary change is visible on Spambase (from $\SpambaseRevWidthStart{}$ to $\SpambaseRevWidthEnd{}$), because retraining the base predictor changes the score function $g(x)$ and therefore the positions and ranking of the calibration scores even though the calibration instances themselves are fixed. These results are consistent with width being more directly sensitive to calibration support than to base-model training-set size.
 
 	\begin{figure}[htbp]
 		\centering
@@ -559,7 +543,7 @@
 
 	\input{table_real_data_nested.tex}
 
-	Across all three datasets, Model~A (score-conditional outcome ambiguity alone) accounts for a large baseline fraction of calibration variability ($R^2$ of $0.8823$ on Adult, $0.9149$ on Bank, and $0.9506$ on Spambase). Adding base-model epistemic uncertainty (Model~B) produces modest improvements. Adding Venn--Abers width $w$ (Model~C) provides additional explanatory power across all three datasets: $\Delta R^2 = +\AdultDeltaRsq{}$ on Adult (95\% bootstrap CI $[\AdultDeltaRsqCILow{}, \AdultDeltaRsqCIHigh{}]$), $\Delta R^2 = +\BankDeltaRsq{}$ on Bank (95\% bootstrap CI $[\BankDeltaRsqCILow{}, \BankDeltaRsqCIHigh{}]$), and $\Delta R^2 = +\SpambaseDeltaRsq{}$ on Spambase (95\% bootstrap CI $[\SpambaseDeltaRsqCILow{}, \SpambaseDeltaRsqCIHigh{}]$). The bootstrap intervals exclude zero, although the lower endpoint for Spambase is very close to zero ($1.65 \times 10^{-5}$). These results are consistent with width containing calibration-support information not accounted for by outcome ambiguity or the base-model bootstrap measure.
+	Across all three datasets, Model~A (score-conditional outcome ambiguity alone) accounts for a large baseline fraction of calibration variability ($R^2$ of $0.8525$ on Adult, $0.9178$ on Bank, and $0.9491$ on Spambase). Adding base-model epistemic uncertainty (Model~B) produces modest improvements. Adding Venn--Abers width $w$ (Model~C) provides additional explanatory power across all three datasets: $\Delta R^2 = +\AdultDeltaRsq{}$ on Adult (95\% bootstrap CI $[\AdultDeltaRsqCILow{}, \AdultDeltaRsqCIHigh{}]$), $\Delta R^2 = +\BankDeltaRsq{}$ on Bank (95\% bootstrap CI $[\BankDeltaRsqCILow{}, \BankDeltaRsqCIHigh{}]$), and $\Delta R^2 = +\SpambaseDeltaRsq{}$ on Spambase (95\% bootstrap CI $[\SpambaseDeltaRsqCILow{}, \SpambaseDeltaRsqCIHigh{}]$). The bootstrap intervals exclude zero, although the lower endpoint for Spambase is very close to zero ($1.65 \times 10^{-5}$). These results are consistent with width containing calibration-support information not accounted for by outcome ambiguity or the base-model bootstrap measure.
 
 	% ============================================================
 	\section{Comparison with Related Calibration Methods}
@@ -587,9 +571,9 @@
 
 	The first point is the connection with the local PAV block. In a stable block containing $N$ observations, changing the hypothetical label of the test point changes the fitted probability by roughly $1/N$. The scaling experiments show the corresponding dependence on calibration size, score density, Bernoulli variance, and local slope. We therefore use the terms local calibration leverage or local calibration support for this quantity. We do not interpret it as a general measure of predictive epistemic uncertainty.
 
-	Outcome ambiguity is a separate quantity. The $v^{-1/3}$ term in Proposition~1 is conditional on density and local slope, and these variables can move together in a fitted model. In the crowd-annotation experiment, width exhibits virtually zero correlation with annotator disagreement or entropy. Furthermore, on real tabular benchmarks, outcome ambiguity and calibration support width combine to explain finite-sample calibration instability, with width providing substantial incremental explanatory power ($\Delta R^2 > 0$). Width on its own should therefore not be used as a general indicator of ambiguous labels.
+	Outcome ambiguity is a separate quantity. The $v^{-1/3}$ term in Proposition~1 is conditional on density and local slope, and these variables can move together in a fitted model. In the crowd-annotation experiment, width exhibits virtually zero correlation with annotator disagreement or entropy. Furthermore, on real tabular benchmarks, outcome ambiguity and calibration support width combine to explain finite-sample calibration instability, with width providing additional explanatory power ($\Delta R^2 > 0$). Width on its own should therefore not be used as a general indicator of ambiguous labels.
 
-	It is equally essential to separate calibration support from base-model epistemic uncertainty. In our controlled thinning experiments, thinning the local calibration set monotonically increased width and calibration instability, while base-model epistemic uncertainty remained completely unchanged. Conversely, subsampling the training set increased base-model uncertainty without affecting calibration width. Thus:
+	It is equally essential to separate calibration support from base-model epistemic uncertainty. In our controlled thinning experiments, thinning the local calibration set monotonically increased width and calibration instability, while base-model epistemic uncertainty remained unchanged by construction. Conversely, subsampling the training set had a much larger effect on base-model uncertainty than on width for Adult and Bank, although width can also change because retraining alters the calibration-score geometry, as seen more clearly on Spambase. Thus:
 	\begin{equation*}
 		\text{outcome ambiguity} \neq \text{base-model epistemic uncertainty} \neq \text{calibration-support uncertainty}.
 	\end{equation*}
@@ -623,7 +607,7 @@
 
 	The same argument also explains why interval width and probability-scale calibration instability are related but are not the same quantity. Width has the inverse-block $n^{-2/3}$ rate, while the fitted probability has the usual isotonic $n^{-1/3}$ rate. The corresponding index $U_{\mathrm{cal}}=\sqrt{\hat p(1-\hat p)w}$ follows the predicted rate and is more closely related to pointwise bootstrap instability than raw width in our experiments.
 
-	The empirical results also show where this interpretation should stop. Width is not a direct measure of label ambiguity, distribution shift, or base-model parameter uncertainty. Across controlled experiments on real tabular benchmarks, reducing local calibration support increases Venn--Abers width and calibration instability while base-model uncertainty is held fixed by construction. The results suggest therefore that Venn--Abers width is most useful as an operational description of local calibration support and leverage, rather than as a general scalar uncertainty score.
+	The empirical results also show where this interpretation should stop. Width is not a direct measure of label ambiguity, distribution shift, or base-model parameter uncertainty. Across controlled experiments on real tabular benchmarks, reducing local calibration support increases Venn--Abers width and calibration instability while base-model uncertainty is held fixed by construction. The results suggest therefore that Venn--Abers width is most useful as an operational measure of local calibration leverage, increasing as effective local calibration support decreases, rather than as a general scalar uncertainty score.
 
 	% ============================================================
 	\appendix
@@ -655,7 +639,7 @@
 	\begin{equation}
 		w(s_{\text{new}}) \propto f(s)^{-2/3} \cdot (\theta(s)(1-\theta(s)))^{-1/3} \cdot (\theta'(s))^{2/3} = w(s)
 	\end{equation}
-	This cancellation shows that the scaling law is mathematically invariant to monotonic score transformations (even if the transformation derivative $g'(s)$ varies abruptly or non-linearly), which is consistent with the rank-ordering nature of the PAV algorithm.
+	This cancellation shows that the scaling law is mathematically invariant to strictly increasing score transformations (even if the transformation derivative $g'(s)$ varies non-linearly), which is consistent with the rank-ordering nature of the PAV algorithm.
 	
 	% ============================================================
 	\section*{Acknowledgements}

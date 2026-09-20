@@ -31,21 +31,22 @@ This report summarizes the empirical findings replacing the multi-domain LLM age
 - When calibration support is preserved, Venn--Abers width remains stable or shows only minor secondary variation attributable to score shifting, confirming that width reflects calibration data density rather than training data scarcity.
 
 ### 3. Quantitative Decomposition (R2 and Bootstrap Confidence Intervals)
-Nested regression results predicting calibration bootstrap instability sigma_cal on held-out test points:
+Nested regression results predicting calibration bootstrap instability sigma_cal on held-out test points
+(exact Venn--Abers implementation, R_thin=100, B_cal=100; regenerated 2026-09-20):
 
 | Dataset | Model A (Ambiguity A) R2 | Model B (Ambiguity + E_model) R2 | Model C (Ambiguity + E_model + Width w) R2 | Delta R2 (C - B) [95% CI] |
 |:---|:---:|:---:|:---:|:---:|
-| **UCI Adult** | 0.8823 | 0.8880 | **0.9088** | **+0.0208** [0.0095, 0.0377] |
-| **UCI Bank** | 0.9149 | 0.9212 | **0.9382** | **+0.0171** [0.0116, 0.0282] |
-| **UCI Spambase** | 0.9506 | 0.9595 | **0.9640** | **+0.0045** [0.0015, 0.0090] |
+| **UCI Adult** | 0.8525 | 0.8559 | **0.9053** | **+0.0494** [0.0305, 0.0741] |
+| **UCI Bank** | 0.9178 | 0.9186 | **0.9407** | **+0.0222** [0.0094, 0.0410] |
+| **UCI Spambase** | 0.9491 | 0.9533 | **0.9544** | **+0.0011** [0.000016, 0.0037] |
 
 Across all three benchmarks:
 - Model A (outcome ambiguity) explains a baseline portion of instability.
 - Model B (adding model epistemic uncertainty) adds marginal or modest information.
-- Model C (adding Venn--Abers width w) provides a substantial, statistically decisive jump in R2 (Delta R2 = +0.0208 on Adult, +0.0171 on Bank, +0.0045 on Spambase; all 95% bootstrap intervals strictly positive and bounded away from zero).
+- Model C (adding Venn--Abers width w) provides a statistically positive jump in R2 (Delta R2 = +0.0494 on Adult, +0.0222 on Bank, +0.0011 on Spambase; all 95% bootstrap intervals strictly positive). Note: the lower endpoint for Spambase is very close to zero (1.65e-05).
 
 ## Conclusion
-The real-data empirical results decisively support the theoretical interpretation: Venn--Abers width approximately measures local calibration support.
+The real-data empirical results support the theoretical interpretation: Venn--Abers width approximately measures local calibration leverage (inverse local calibration support).
 Venn--Abers width measures a calibration-specific component of epistemic uncertainty that is empirically and conceptually distinct from both outcome ambiguity and base-model epistemic uncertainty.
 
-*Execution time: 1055.0 seconds.*
+*Execution time: 3481.4 seconds (exact VA implementation, R_thin=100, B_cal=100).*
