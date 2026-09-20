@@ -75,10 +75,7 @@ va-width-experiments/
 │   ├── table_w2_exponent_progression.tex# Table 2 LaTeX source
 │   ├── table_cifar_correlations.tex    # Table 3 LaTeX source
 │   └── table_real_data_nested.tex      # Table 4 LaTeX source
-├── results/                            # Audit reports, selected points, and manifests
-│   ├── REPO_PAPER_AUDIT_BEFORE.md      # Pre-audit consistency inventory
-│   ├── REPO_PAPER_AUDIT_AFTER.md       # Post-audit verification report and checklist
-│   ├── RESULT_CHANGES.md               # Systematic table of old vs corrected numbers
+├── results/                            # Manifests and evaluation artifacts
 │   ├── paper_results_manifest.json     # Machine-readable numerical results manifest
 │   ├── environment.txt                 # Exact environment, platform, and git commit
 │   └── real_data_selected_points.csv   # Pre-specified test evaluation locations
@@ -160,7 +157,7 @@ Individual experiments can also be executed independently:
 | **4. Exponent Convergence** | Table 2, Figure 4 | `python src/run_experiment_w2_convergence.py` | ~2 min |
 | **5. Non-Monotonic Scaling** | Figure 5 | `python src/non_monotonic_experiments.py` | ~10 sec |
 | **6. Synthetic Crowd Experiment** | Table 3, Figure 8 | `python src/calibration_comparison.py` | ~45 sec |
-| **7. Real-Data Support Thinning** | Figures 6, 7, Table 4 | `python src/real_data_calibration_support.py` | ~6 min |
+| **7. Real-Data Support Thinning** | Figures 6, 7, Table 4 | `python src/real_data_calibration_support.py` | ~58 min |
 
 ---
 
