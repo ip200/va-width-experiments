@@ -13,7 +13,7 @@ This repository contains the complete, self-contained codebase, empirical benchm
 
 Venn--Abers predictors (VAPs) output a multiprobabilistic pair $[p_0, p_1]$ with finite-sample validity guarantees under exchangeability. However, the exact semantic interpretation of the interval width $w = p_1 - p_0$ has remained an open question. In applications, width is often informally treated as a measure of outcome ambiguity (aleatoric uncertainty) or model parameter uncertainty (epistemic uncertainty).
 
-This paper establishes that **Venn--Abers width is a measure of local calibration leverage**, reflecting the finite calibration support available in score space:
+This paper establishes that **Venn--Abers width primarily reflects local calibration leverage, or equivalently inverse effective local calibration support**:
 
 1. **Inverse Block Size Mechanism**:
    A test instance falls into a local Pool Adjacent Violators (PAV) active block containing $N_{\text{eff}}(s)$ calibration observations. Perturbing the test point's hypothetical label shifts the local cumulative sum by $1$, yielding:
@@ -27,7 +27,7 @@ This paper establishes that **Venn--Abers width is a measure of local calibratio
 3. **Probability-Scale Instability Index**:
    The index:
    $$U_{\text{cal}}(s) = \sqrt{\hat p(s)(1 - \hat p(s)) w(s)} \propto n^{-1/3}$$
-   exhibits the classical isotonic cube-root rate and provides a calibrated probability-scale instability summary.
+   where $\hat p = (p_0 + p_1)/2$ is the arithmetic midpoint, exhibits the classical isotonic cube-root rate and provides a calibrated probability-scale instability summary.
 
 4. **Tripartite Uncertainty Separation**:
    $$\text{outcome ambiguity} \;\neq\; \text{base-model epistemic uncertainty} \;\neq\; \text{calibration leverage / support}$$
@@ -43,207 +43,145 @@ Controlled interventions on real tabular benchmarks (**UCI Adult**, **UCI Bank M
 
 ```text
 va-width-experiments/
-├── README.md               # Repository documentation and reproduction guide
-├── requirements.txt        # Python package dependencies
-├── LICENSE                 # MIT License
-├── paper/                  # Publication LaTeX source, figures, tables, and PDF
-│   ├── arxiv_va_interval_width.tex     # Master LaTeX manuscript
-│   ├── arxiv_va_interval_width.pdf     # Compiled publication PDF (22 pages)
-│   ├── real_data_local_support.png     # Figure 6: Local calibration-support thinning
-│   ├── training_support_epistemic.png  # Figure 7: Reverse training-support intervention
-│   ├── table_real_data_nested.tex      # Table 3: Real-data nested regression decomposition
-│   ├── idealised_scaling_laws.png      # Figure 3: Synthetic scaling laws (w ~ n^-2/3)
-│   ├── table_w2_exponent_progression.tex # Table 1: Exponent convergence progression
-│   ├── w2_exponent_convergence.png     # Figure 4: Exponent convergence plots
-│   ├── non_monotonic_scaling_laws.png  # Figure 5: Non-monotonic & cusp scaling regimes
-│   ├── width_vs_bootstrap_instability.png # Figure 2: Pointwise classifier bootstrap
-│   ├── table_cifar_correlations.tex    # Table 2: CIFAR crowd-annotation simulation
-│   └── calibration_uncertainty_bootstrap.png # Figure 8: Alternative calibrator comparison
-├── src/                    # Modular Python experiment and plotting scripts
-│   ├── utils.py                        # Common statistical utilities and data generators
-│   ├── real_data_calibration_support.py # Primary real-data experiments (Adult, Bank, Spambase)
-│   ├── plot_figures_6_7.py             # Publication rendering for Figures 6 and 7
-│   ├── scaling_laws_experiment.py       # 1D controlled synthetic scaling experiments
-│   ├── run_experiment_w2_convergence.py # Multivariate exponent convergence (n up to 32,000)
-│   ├── non_monotonic_experiments.py    # Score invariance & non-monotonic slope regimes
-│   ├── run_experiment_classifier_bootstrap_n500.py # Pointwise bootstrap evaluation
-│   ├── generate_figure_width_vs_instability.py # Generates Figure 2
-│   ├── calibration_comparison.py       # IR, PS, HB comparison & CIFAR crowd simulation
-│   └── generate_all_figures_tables.py  # Fast reproduction of all figures and tables
-├── data/                   # Experimental CSV data and precomputed resamples
-│   ├── REAL_DATA_RESULTS.csv           # Real-data thinning metrics
-│   ├── REVERSE_INTERVENTION_RESULTS.csv# Real-data reverse training intervention metrics
-│   ├── UNCERTAINTY_DECOMPOSITION.csv   # N=500 pointwise decomposition evaluations
-│   ├── SCALING_IDEALISED.csv           # 1D scaling law simulation data
-│   ├── proposition1_convergence.csv    # Large-n multivariate exponent progression data
-│   └── classifier_bootstrap_n500.csv   # Pointwise bootstrap evaluations
-└── results/                # Detailed experiment execution reports and markdown logs
-    └── REAL_DATA_EXPERIMENT_REPORT.md
+├── README.md                           # Repository documentation and reproduction guide
+├── requirements.txt                    # Minimal package requirements
+├── requirements-lock.txt               # Exact pinned dependencies for bit-for-bit reproduction
+├── LICENSE                             # MIT License
+├── data/                               # Canonical precomputed experimental results
+│   ├── calibration_resampling_baseline.csv   # Table 1: Calibration resampling baseline
+│   ├── classifier_bootstrap_n500.csv         # Figure 2: Pointwise classifier bootstrap (N=500)
+│   ├── SCALING_IDEALISED.csv                 # Figure 3: Idealised sample-size scaling laws
+│   ├── proposition1_convergence.csv          # Table 2 & Figure 4: W2 exponent convergence
+│   ├── proposition1_convergence_bootstrap.csv# Table 2: 1000 bootstrap draws per calibration size
+│   ├── non_monotonic_scaling_laws.csv        # Figure 5: Regimes A, B, C, D scaling laws
+│   ├── table_cifar_correlations.csv          # Table 3: Synthetic CIFAR-10H crowd correlations
+│   ├── REAL_DATA_RESULTS.csv                 # Figure 6: Real-data calibration thinning
+│   ├── REVERSE_INTERVENTION_RESULTS.csv      # Figure 7: Reverse training-support intervention
+│   ├── UNCERTAINTY_DECOMPOSITION.csv         # Table 4: Held-out nested regression points
+│   └── table_w2_high_n_robustness.csv        # Pooled W2 regressions
+├── paper/                              # Publication LaTeX source, figures, tables, and PDF
+│   ├── arxiv_va_interval_width.tex     # Master LaTeX manuscript (22 pages)
+│   ├── arxiv_va_interval_width.pdf     # Compiled publication PDF
+│   ├── generated_results.tex           # Auto-generated LaTeX macros from data manifest
+│   ├── width_vs_bootstrap_instability.png # Figure 2 (PNG & PDF)
+│   ├── idealised_scaling_laws.png      # Figure 3 (PNG & PDF)
+│   ├── w2_exponent_convergence.png     # Figure 4 (PNG & PDF)
+│   ├── non_monotonic_scaling_laws.png  # Figure 5 (PNG & PDF)
+│   ├── real_data_local_support.png     # Figure 6 (PNG & PDF)
+│   ├── training_support_epistemic.png  # Figure 7 (PNG & PDF)
+│   ├── calibration_uncertainty_bootstrap.png # Figure 8: Calibrator comparison
+│   ├── alternative_calibrator_instability.png# Alternative calibrators scatter plot
+│   ├── table_calibration_resampling.tex# Table 1 LaTeX source
+│   ├── table_w2_exponent_progression.tex# Table 2 LaTeX source
+│   ├── table_cifar_correlations.tex    # Table 3 LaTeX source
+│   └── table_real_data_nested.tex      # Table 4 LaTeX source
+├── results/                            # Audit reports, selected points, and manifests
+│   ├── REPO_PAPER_AUDIT_BEFORE.md      # Pre-audit consistency inventory
+│   ├── REPO_PAPER_AUDIT_AFTER.md       # Post-audit verification report and checklist
+│   ├── RESULT_CHANGES.md               # Systematic table of old vs corrected numbers
+│   ├── paper_results_manifest.json     # Machine-readable numerical results manifest
+│   ├── environment.txt                 # Exact environment, platform, and git commit
+│   └── real_data_selected_points.csv   # Pre-specified test evaluation locations
+└── src/                                # Reproducible experiment scripts
+    ├── generate_paper_artifacts.py     # Fast generator: produces Figures 2-8 & Tables 1-4 (< 10s)
+    ├── verify_paper_consistency.py     # Automated audit verifier (checks data, assets, manifest)
+    ├── generate_manifest.py            # Generates manifest.json and generated_results.tex
+    ├── run_all_experiments.py          # Master runner executing all experiments sequentially
+    ├── utils.py                        # Common Venn-Abers extraction helpers and metrics
+    ├── run_calibration_resampling_baseline.py # Generator for Table 1
+    ├── run_experiment_classifier_bootstrap_n500.py # Generator for Figure 2
+    ├── run_idealised_scaling.py        # Generator for Figure 3
+    ├── run_experiment_w2_convergence.py# Generator for Figure 4 & Table 2
+    ├── non_monotonic_experiments.py    # Generator for Figure 5 & invariance test
+    ├── calibration_comparison.py       # Generator for Table 3 & Figure 8
+    └── real_data_calibration_support.py# Generator for Figures 6, 7 & Table 4
 ```
 
 ---
 
-## 3. Installation & Setup
+## 3. Quickstart & Fast Reproduction
 
-### Prerequisites
-- Python 3.10+ (tested on Python 3.11, 3.12, and 3.13)
-- TeX Live / MacTeX (with `pdflatex`) for compiling the paper
+### Installation
+Clone the repository and install dependencies in Python 3.10+:
 
-### Environment Installation
 ```bash
-# 1. Clone repository
 git clone https://github.com/ip200/va-width-experiments.git
 cd va-width-experiments
-
-# 2. Create and activate a clean virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
-# 3. Upgrade pip and install package dependencies
-pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
----
-
-## 4. Reproducing Experiments & Figures
-
-You can reproduce all paper artifacts in two ways:
-1. **Fast Reproduction**: Regenerate all publication figures and LaTeX tables from precomputed experimental data in ~5 seconds.
-2. **End-to-End Reproduction**: Re-run the full Monte Carlo simulations, bootstrap refits, and real-data interventions from scratch.
-
-### 4.1 Fast Reproduction (From Precomputed Data)
-
-To regenerate all figures and LaTeX tables directly from the experimental datasets:
-
+For bit-for-bit exact environment reproduction:
 ```bash
-# Option A: Regenerate all figures and tables in a single command (~5s)
-python src/generate_all_figures_tables.py
-
-# Option B: Regenerate Figures 6 and 7 specifically
-python src/plot_figures_6_7.py
+pip install -r requirements-lock.txt
 ```
 
----
-
-### 4.2 End-to-End Reproduction (From Scratch)
-
-#### Experiment 1: Real-Data Local Support Thinning & Reverse Intervention (Figures 6 & 7, Table 3)
-Evaluates UCI Adult, UCI Bank Marketing, and UCI Spambase under controlled local calibration thinning (100% down to 12.5%, $R=100$) and reverse training support subsampling (100% down to 25%, $B=100$). Also estimates nested uncertainty regressions across $N=500$ held-out test observations per dataset with $B_{\text{cal}}=200$ bootstrap resamples and 2,000 bootstrap CI draws.
+### Fast Artifact Regeneration (< 10 seconds)
+Regenerate all publication-quality figures (PDF & PNG) and LaTeX tables directly from canonical precomputed experimental data:
 
 ```bash
-python src/real_data_calibration_support.py
+python src/generate_paper_artifacts.py
 ```
-*Expected Runtime*: ~3–5 minutes  
-*Generated Artifacts*:
-- `paper/real_data_local_support.png` (Figure 6)
-- `paper/training_support_epistemic.png` (Figure 7)
-- `paper/table_real_data_nested.tex` (Table 3)
-- `data/REAL_DATA_RESULTS.csv`
-- `data/REVERSE_INTERVENTION_RESULTS.csv`
-- `data/UNCERTAINTY_DECOMPOSITION.csv`
 
-#### Experiment 2: Synthetic Scaling Laws (Figure 3)
-Simulates calibration sets across $n \in [100, 3200]$ under controlled density, ambiguity, and slope settings to verify the $w \propto n^{-2/3}$ and $U_{\text{cal}} \propto n^{-1/3}$ scaling rates.
+### Automated Consistency Verification (< 2 seconds)
+Verify that all committed data files, manifests, figures, and tables agree to $< 5\times 10^{-5}$ numerical tolerance with zero obsolete artifacts or collisions:
 
 ```bash
-python src/scaling_laws_experiment.py
+python src/verify_paper_consistency.py
 ```
-*Expected Runtime*: ~20 seconds  
-*Generated Artifacts*:
-- `data/SCALING_IDEALISED.csv`
-- `paper/idealised_scaling_laws.png` (Figure 3)
 
-#### Experiment 3: Multivariate Exponent Convergence (Figure 4, Table 1)
-Estimates local density ($f$), ambiguity ($v$), and slope ($\theta'$) exponents via multivariate log-linear regressions across calibration sizes up to $n = 32{,}000$, validating finite-sample convergence toward the asymptotic targets $(-2/3, -1/3, +2/3)$.
-
-```bash
-python src/run_experiment_w2_convergence.py
-```
-*Expected Runtime*: ~1–2 minutes  
-*Generated Artifacts*:
-- `data/proposition1_convergence.csv`
-- `paper/w2_exponent_convergence.png` (Figure 4)
-- `paper/table_w2_exponent_progression.tex` (Table 1)
-
-#### Experiment 4: Score Invariance & Non-Monotonic Scaling Regimes (Figure 5)
-Verifies empirical invariance under strictly increasing non-linear score transformations and benchmarks sample-size scaling across four distinct slope regimes:
-- **Regime A (Standard Monotonic)**: $\theta' > 0$ (rate $-2/3$)
-- **Regime B (Decreasing / Violating)**: $\theta' < 0$ (rate $-1$)
-- **Regime C (Parabolic Extremum)**: local peak with violation (rate $-1$)
-- **Regime D (Cusp / Flat Point)**: order-two flat point (rate $-4/5$)
-
-```bash
-python src/non_monotonic_experiments.py
-```
-*Expected Runtime*: ~30 seconds  
-*Generated Artifacts*:
-- `paper/non_monotonic_scaling_laws.png` (Figure 5)
-
-#### Experiment 5: Pointwise Classifier Bootstrap & Instability Index (Figure 2)
-Evaluates pointwise Venn--Abers width and $U_{\text{cal}}$ against empirical standard deviations from $M=200$ calibration bootstrap resamples on held-out test points ($N=500$).
-
-```bash
-# Step 1: Compute pointwise bootstrap data
-python src/run_experiment_classifier_bootstrap_n500.py
-
-# Step 2: Plot Figure 2
-python src/generate_figure_width_vs_instability.py
-```
-*Expected Runtime*: ~45 seconds  
-*Generated Artifacts*:
-- `data/classifier_bootstrap_n500.csv`
-- `paper/width_vs_bootstrap_instability.png` (Figure 2)
-
-#### Experiment 6: Alternative Calibration Methods & CIFAR-10H Crowd Simulation (Figure 8, Table 2)
-Compares Venn--Abers interval width against the sampling variability of Isotonic Regression (IR), Platt Scaling (PS), and Histogram Binning (HB). Runs a multiclass crowd-annotation simulation comparing width against bootstrap instability, annotator disagreement ($2p(1-p)$), and annotator entropy.
-
-```bash
-python src/calibration_comparison.py
-```
-*Expected Runtime*: ~45 seconds  
-*Generated Artifacts*:
-- `paper/calibration_uncertainty_bootstrap.png` (Figure 8)
-- `paper/table_cifar_correlations.tex` (Table 2)
-
----
-
-## 5. Mapping of Paper Elements to Code and Data
-
-| Paper Element | Description | Script | Input Data | Output File |
-| :--- | :--- | :--- | :--- | :--- |
-| **Figure 1** | GCM Cumulative Sum Diagram | *(TikZ in LaTeX)* | N/A | `arxiv_va_interval_width.tex` |
-| **Figure 2** | Width vs Bootstrap Instability ($U_{\text{cal}}$) | `generate_figure_width_vs_instability.py` | `classifier_bootstrap_n500.csv` | `paper/width_vs_bootstrap_instability.png` |
-| **Figure 3** | Sample-Size Scaling Laws ($n^{-2/3}, n^{-1/3}$) | `scaling_laws_experiment.py` | `SCALING_IDEALISED.csv` | `paper/idealised_scaling_laws.png` |
-| **Figure 4** | Exponent Convergence across $n$ | `run_experiment_w2_convergence.py` | `proposition1_convergence.csv` | `paper/w2_exponent_convergence.png` |
-| **Figure 5** | Non-Monotonic & Cusp Scaling Regimes | `non_monotonic_experiments.py` | Synthetic generation | `paper/non_monotonic_scaling_laws.png` |
-| **Figure 6** | Real-Data Calibration Support Thinning | `plot_figures_6_7.py` | `REAL_DATA_RESULTS.csv` | `paper/real_data_local_support.png` |
-| **Figure 7** | Reverse Training Support Intervention | `plot_figures_6_7.py` | `REVERSE_INTERVENTION_RESULTS.csv` | `paper/training_support_epistemic.png` |
-| **Figure 8** | Alternative Calibration Comparison (IR/PS/HB) | `calibration_comparison.py` | Synthetic generation | `paper/calibration_uncertainty_bootstrap.png` |
-| **Table 1** | Exponent Progression across $n$ | `run_experiment_w2_convergence.py` | `proposition1_convergence.csv` | `paper/table_w2_exponent_progression.tex` |
-| **Table 2** | CIFAR Crowd Simulation Correlations | `calibration_comparison.py` | Synthetic embeddings | `paper/table_cifar_correlations.tex` |
-| **Table 3** | Real-Data Nested Regressions ($N=500$) | `real_data_calibration_support.py` | `UNCERTAINTY_DECOMPOSITION.csv` | `paper/table_real_data_nested.tex` |
-
----
-
-## 6. Compiling the LaTeX Paper
-
-The complete camera-ready paper can be compiled from the `paper/` directory using standard `pdflatex`:
+### Recompile the LaTeX Manuscript
+Compile the camera-ready 22-page paper with `pdflatex` + `bibtex`:
 
 ```bash
 cd paper
 pdflatex -interaction=nonstopmode arxiv_va_interval_width.tex
+bibtex arxiv_va_interval_width
+pdflatex -interaction=nonstopmode arxiv_va_interval_width.tex
 pdflatex -interaction=nonstopmode arxiv_va_interval_width.tex
 ```
 
-The resulting document is:
-- **Output PDF**: `paper/arxiv_va_interval_width.pdf` (22 pages, 0 errors, 0 undefined references).
+---
+
+## 4. Full End-to-End Experiment Execution
+
+To rerun the entire experimental suite from scratch and regenerate all raw data:
+
+```bash
+python src/run_all_experiments.py
+```
+
+Individual experiments can also be executed independently:
+
+| Experiment | Target Assets | Command | Expected Runtime |
+|---|---|---|---|
+| **1. Resampling Baseline** | Table 1 | `python src/run_calibration_resampling_baseline.py` | ~15 sec |
+| **2. Classifier Bootstrap** | Figure 2 | `python src/run_experiment_classifier_bootstrap_n500.py` | ~25 sec |
+| **3. Idealised Scaling** | Figure 3 | `python src/run_idealised_scaling.py` | ~20 sec |
+| **4. Exponent Convergence** | Table 2, Figure 4 | `python src/run_experiment_w2_convergence.py` | ~2 min |
+| **5. Non-Monotonic Scaling** | Figure 5 | `python src/non_monotonic_experiments.py` | ~10 sec |
+| **6. Synthetic Crowd Experiment** | Table 3, Figure 8 | `python src/calibration_comparison.py` | ~45 sec |
+| **7. Real-Data Support Thinning** | Figures 6, 7, Table 4 | `python src/real_data_calibration_support.py` | ~6 min |
 
 ---
 
-## 7. Citation
+## 5. Dataset Provenance & Benchmark Details
 
-If you find this work or codebase useful in your research, please cite:
+All real-world benchmarks are automatically fetched via OpenML with pinned version IDs:
+
+| Dataset | OpenML Name / ID | Version | Total $N$ | Train / Cal / Test | Positive Class Definition |
+|---|---|---|---|---|---|
+| **Adult** | `adult` / 1590 | 2 | 48,842 | 24,421 / 12,210 / 12,211 | Income `>50K` |
+| **Bank Marketing** | `bank-marketing` / 1461 | 1 | 45,211 | 22,605 / 11,303 / 11,303 | Subscription `"2"` (`"yes"`) |
+| **Spambase** | `spambase` / 44 | 1 | 4,601 | 2,300 / 1,150 / 1,151 | Spam label `1` |
+
+Base models utilize a uniform specification across all fits:
+`HistGradientBoostingClassifier(max_depth=4, learning_rate=0.05, max_iter=200, random_state=seed)`.
+
+---
+
+## 6. Citation
+
+If you find this work or codebase useful, please cite:
 
 ```bibtex
 @article{petej2026meaning,
@@ -256,6 +194,6 @@ If you find this work or codebase useful in your research, please cite:
 
 ---
 
-## 8. License
+## 7. License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

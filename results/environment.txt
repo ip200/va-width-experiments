@@ -1,0 +1,19 @@
+Repository Environment Specification
+Generated: 2026-09-20T15:05:18.242472+00:00
+Git Branch: repo-paper-consistency-audit
+Git Commit SHA: 7ccead8c38d7cc97d06f22031fe7d9d888cf8633
+Platform: macOS-26.2-arm64-arm-64bit
+Architecture: arm64
+Python Version: 3.11.4 (main, Jul  5 2023, 08:40:20) [Clang 14.0.6 ]
+
+Key Packages:
+  numpy: 1.25.1
+  scipy: 1.11.1
+  pandas: 2.0.3
+  scikit-learn: 1.9.0
+  matplotlib: 3.7.2
+  venn-abers: installed
+
+Standard Seeds Used:
+  General: 42
+  Bootstrap draws: seeded per replicate (rng = np.random.default_rng(seed))
