@@ -224,3 +224,7 @@ __marimo__/
 
 # macOS
 .DS_Store
+
+# Paper and publications
+paper/
+
