@@ -8,6 +8,7 @@ Saves updated plots and data to both paper/ and target repositories.
 
 import os
 import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
