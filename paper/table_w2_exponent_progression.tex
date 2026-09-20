@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{2.5pt}
+\caption{Finite-sample estimates of the local scaling exponents as the calibration sample increases. The theoretical targets are $-2/3$ for local density, $-1/3$ for Bernoulli ambiguity, and $+2/3$ for local slope. The discrepancy from the theoretical values falls substantially as $n_{\mathrm{cal}}$ increases, with some sampling variability at the largest calibration size.}
+\label{tab:exponent_convergence}
+\begin{tabular}{rccccc}
+\toprule
+$n_{\mathrm{cal}}$ & $\hat\beta_\rho$ [95\% CI] & $\hat\beta_v$ [95\% CI] & $\hat\beta_s$ [95\% CI] & Mean Abs.\ Error & $R^2$ \\
+\midrule
+500   & $-0.425$ [$-0.453, -0.398$] & $-0.129$ [$-0.178, -0.081$] & $+0.390$ [$+0.344, +0.442$] & 0.241 & 0.319 \\
+1000  & $-0.523$ [$-0.551, -0.499$] & $-0.243$ [$-0.291, -0.194$] & $+0.536$ [$+0.483, +0.590$] & 0.121 & 0.406 \\
+2000  & $-0.539$ [$-0.570, -0.508$] & $-0.237$ [$-0.288, -0.185$] & $+0.554$ [$+0.497, +0.609$] & 0.112 & 0.433 \\
+4000  & $-0.602$ [$-0.630, -0.573$] & $-0.313$ [$-0.366, -0.267$] & $+0.607$ [$+0.553, +0.669$] & 0.048 & 0.492 \\
+8000  & $-0.657$ [$-0.693, -0.620$] & $-0.296$ [$-0.368, -0.226$] & $+0.589$ [$+0.512, +0.672$] & 0.042 & 0.490 \\
+16000 & $-0.660$ [$-0.693, -0.625$] & $-0.388$ [$-0.470, -0.309$] & $+0.690$ [$+0.592, +0.789$] & 0.028 & 0.537 \\
+32000 & $-0.615$ [$-0.670, -0.566$] & $-0.303$ [$-0.404, -0.196$] & $+0.614$ [$+0.480, +0.745$] & 0.045 & 0.479 \\
+\bottomrule
+\end{tabular}
+\end{table}

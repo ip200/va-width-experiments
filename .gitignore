@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# TeX auxiliary files
+*.aux
+*.out
+*.synctex.gz
+
+# macOS
+.DS_Store
