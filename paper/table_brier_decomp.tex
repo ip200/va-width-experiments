@@ -1,0 +1,30 @@
+\begin{table}[htbp]
+\centering
+\caption{Brier score decomposition (Reliability vs. Resolution) across different monotonicity settings. Lower Brier score and Reliability are better, while higher Resolution is better. Uncertainty represents the intrinsic label variance.}
+\label{tab:brier_decomposition}
+\begin{tabular}{llcccc}
+\toprule
+Setting & Calibrator & Brier Score $\downarrow$ & Reliability $\downarrow$ & Resolution $\uparrow$ & Uncertainty \\
+\midrule
+\multirow{4}{*}{Monotonic Sigmoidal} & VAP & 0.1028 & 0.0006 & 0.1476 & 0.2500 \\
+ & IR & 0.1027 & 0.0005 & 0.1479 & 0.2500 \\
+ & PS & \textbf{0.1022} & 0.0005 & \textbf{0.1482} & 0.2500 \\
+ & HB & 0.1040 & \textbf{0.0003} & 0.1462 & 0.2500 \\
+\midrule
+\multirow{4}{*}{Monotonic Step-like} & VAP & \textbf{0.1651} & \textbf{0.0030} & \textbf{0.0880} & 0.2500 \\
+ & IR & 0.1660 & 0.0039 & \textbf{0.0880} & 0.2500 \\
+ & PS & 0.1810 & 0.0162 & 0.0850 & 0.2500 \\
+ & HB & \textbf{0.1652} & \textbf{0.0029} & \textbf{0.0880} & 0.2500 \\
+\midrule
+\multirow{4}{*}{Non-Monotonic Peak} & VAP & 0.2301 & 0.0008 & 0.0045 & 0.2339 \\
+ & IR & 0.2305 & 0.0011 & 0.0045 & 0.2339 \\
+ & PS & 0.2345 & \textbf{0.0005} & 0.0000 & 0.2339 \\
+ & HB & \textbf{0.2251} & 0.0024 & \textbf{0.0109} & 0.2339 \\
+\midrule
+\multirow{4}{*}{Non-Monotonic Wave} & VAP & 0.2106 & \textbf{0.0026} & 0.0419 & 0.2500 \\
+ & IR & 0.2126 & 0.0047 & 0.0422 & 0.2500 \\
+ & PS & 0.2199 & 0.0161 & \textbf{0.0465} & 0.2500 \\
+ & HB & \textbf{0.2080} & 0.0032 & 0.0451 & 0.2500 \\
+\bottomrule
+\end{tabular}
+\end{table}

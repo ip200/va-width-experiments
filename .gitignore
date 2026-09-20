@@ -225,6 +225,15 @@ __marimo__/
 # macOS
 .DS_Store
 
-# Paper and publications
-paper/
 
+
+# Paper build artifacts (keep master tex, bib, generated macros, tables, figures)
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.synctex.gz
+paper/*.toc
+paper/*.fls
+paper/*.fdb_latexmk

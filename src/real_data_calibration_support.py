@@ -35,6 +35,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.isotonic import isotonic_regression
 from sklearn.metrics import accuracy_score, brier_score_loss, roc_auc_score
 from venn_abers import VennAbers
+from fast_venn_abers import exact_va_probs, exact_va_scalar
 
 # Add current/parent directory to import path
 curr_dir = os.path.dirname(os.path.abspath(__file__))
@@ -70,55 +71,18 @@ plt.rcParams.update({
 
 def fast_va_scalar(s_cal: np.ndarray, y_cal: np.ndarray, s_target: float):
     """
-    Computes exact Venn-Abers (p0, p1, p_hat, width) at a single test score s_target
-    using C-optimized isotonic regression.
+    Computes exact Venn-Abers (p0, p1, p_hat, width) at a single test score s_target.
+    Groups identical calibration scores and computes exact GCM bounds matching the official package.
     """
-    n = len(s_cal)
-    s_target_flt = float(s_target)
-    
-    # Combined scores array with target test point appended
-    s_all = np.empty(n + 1, dtype=np.float64)
-    s_all[:n] = s_cal
-    s_all[n] = s_target_flt
-    order = np.argsort(s_all, kind="mergesort")
-    pos = np.where(order == n)[0][0]
-    
-    # 1. p0: test point assumed label 0.0
-    y0_all = np.empty(n + 1, dtype=np.float64)
-    y0_all[:n] = y_cal
-    y0_all[n] = 0.0
-    iso0 = isotonic_regression(y0_all[order], increasing=True)
-    p0 = float(iso0[pos])
-    
-    # 2. p1: test point assumed label 1.0
-    y1_all = np.empty(n + 1, dtype=np.float64)
-    y1_all[:n] = y_cal
-    y1_all[n] = 1.0
-    iso1 = isotonic_regression(y1_all[order], increasing=True)
-    p1 = float(iso1[pos])
-    
-    p0_val = float(np.clip(p0, 0.0, 1.0))
-    p1_val = float(np.clip(p1, 0.0, 1.0))
-    p_hat = 0.5 * (p0_val + p1_val)
-    width = float(max(0.0, p1_val - p0_val))
-    return p0_val, p1_val, p_hat, width
+    return exact_va_scalar(s_cal, y_cal, s_target)
 
 
 def compute_va_probs(s_cal: np.ndarray, y_cal: np.ndarray, s_test: np.ndarray):
     """
-    Vectorized Venn-Abers on 1D scores via official VennAbers package.
+    Vectorized Venn-Abers on 1D scores matching the official package.
     Returns (p0, p1, p_hat, width).
     """
-    p_cal = np.column_stack([1.0 - s_cal, s_cal])
-    p_test = np.column_stack([1.0 - s_test, s_test])
-    va = VennAbers()
-    va.fit(p_cal, y_cal)
-    _, pred = va.predict_proba(p_test)
-    p0 = np.clip(pred[:, 0], 0.0, 1.0)
-    p1 = np.clip(pred[:, 1], 0.0, 1.0)
-    p_hat = 0.5 * (p0 + p1)
-    width = np.maximum(0.0, p1 - p0)
-    return p0, p1, p_hat, width
+    return exact_va_probs(s_cal, y_cal, s_test)
 
 
 def load_dataset(name="adult", seed=42):
@@ -241,7 +205,7 @@ def run_experiment_for_dataset(
     R_thin=100,
     B_cal=100,
     B_model=100,
-    n_jobs=4,
+    n_jobs=8,
 ):
     rng = set_seed(seed)
     X_train, y_train, X_cal, y_cal, X_test, y_test, cat_cols = load_dataset(dataset_name, seed=seed)
@@ -370,11 +334,8 @@ def run_experiment_for_dataset(
             s_test_sub = clf_sub.predict_proba(X_test.iloc[target_indices])[:, 1]
             s_cal_sub = clf_sub.predict_proba(X_cal)[:, 1]
             
-            # Compute width at each target point using fast_va_scalar
-            w_targets = np.zeros(len(target_indices))
-            for i, st in enumerate(s_test_sub):
-                _, _, _, w_t = fast_va_scalar(s_cal_sub, y_cal, st)
-                w_targets[i] = w_t
+            # Compute width at all target points using compute_va_probs
+            _, _, _, w_targets = compute_va_probs(s_cal_sub, y_cal, s_test_sub)
             return s_test_sub, w_targets
 
         rev_runs = Parallel(n_jobs=n_jobs)(

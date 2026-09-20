@@ -22,31 +22,14 @@ curr_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.dirname(curr_dir)
 
 
+if curr_dir not in sys.path:
+    sys.path.insert(0, curr_dir)
+from fast_venn_abers import exact_va_scalar
+
 def fast_va_scalar(s_cal: np.ndarray, y_cal: np.ndarray, s_target: float):
-    """Exact C-accelerated Venn-Abers at single test score s_target."""
-    n = len(s_cal)
-    s_all = np.empty(n + 1, dtype=np.float64)
-    s_all[:n] = s_cal
-    s_all[n] = float(s_target)
-    order = np.argsort(s_all, kind="mergesort")
-    pos = np.where(order == n)[0][0]
-    
-    y0_all = np.empty(n + 1, dtype=np.float64)
-    y0_all[:n] = y_cal
-    y0_all[n] = 0.0
-    iso0 = isotonic_regression(y0_all[order], increasing=True)
-    p0 = float(iso0[pos])
-    
-    y1_all = np.empty(n + 1, dtype=np.float64)
-    y1_all[:n] = y_cal
-    y1_all[n] = 1.0
-    iso1 = isotonic_regression(y1_all[order], increasing=True)
-    p1 = float(iso1[pos])
-    
-    p0_val = float(np.clip(p0, 0.0, 1.0))
-    p1_val = float(np.clip(p1, 0.0, 1.0))
-    width = float(max(0.0, p1_val - p0_val))
-    return p0_val, p1_val, width
+    """Exact Venn-Abers scalar calculation respecting tie groupings and GCM geometry."""
+    p0, p1, pm, w = exact_va_scalar(s_cal, y_cal, s_target)
+    return p0, p1, w
 
 
 def test_score_invariance():
