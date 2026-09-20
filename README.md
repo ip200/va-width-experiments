@@ -61,6 +61,7 @@ va-width-experiments/
 │   └── table_w2_high_n_robustness.csv        # Pooled W2 regressions
 ├── paper/                              # Publication LaTeX source, figures, tables, and PDF
 │   ├── arxiv_va_interval_width.tex     # Master LaTeX manuscript (22 pages)
+│   ├── references.bib                  # BibTeX bibliography database
 │   ├── arxiv_va_interval_width.pdf     # Compiled publication PDF
 │   ├── generated_results.tex           # Auto-generated LaTeX macros from data manifest
 │   ├── width_vs_bootstrap_instability.png # Figure 2 (PNG & PDF)
