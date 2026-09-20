@@ -1,3 +1,4 @@
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -340,7 +341,7 @@ def main():
     plt.ylabel('VAP Interval Width ($p_1 - p_0$)')
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    scatter_plot_path = os.path.join(paper_dir, 'width_vs_bootstrap_instability.png')
+    scatter_plot_path = os.path.join(paper_dir, 'alternative_calibrator_instability.png')
     plt.savefig(scatter_plot_path, dpi=300)
     plt.close()
     print(f"Scatter plot saved to {scatter_plot_path}")
@@ -409,8 +410,8 @@ def main():
             va_b.fit(p_cal[idx], y_cal_real[idx])
             _, pred_b = va_b.predict_proba(p_test)
             pb0, pb1 = pred_b[:, 0], pred_b[:, 1]
-            p_pt = pb1 / (1.0 - pb0 + pb1)
-            boot_preds.append(p_pt)
+            p_hat = 0.5 * (pb0 + pb1)
+            boot_preds.append(p_hat)
         boot_sd = np.std(boot_preds, axis=0)
         
         disagreement = 2.0 * y_mean_test * (1.0 - y_mean_test)
@@ -426,12 +427,24 @@ def main():
         pearson_ent.append(stats.pearsonr(widths, entropy)[0])
         spearman_ent.append(stats.spearmanr(widths, entropy)[0])
 
+    # Save canonical CSV for CIFAR correlations
+    data_dir = os.path.join(os.path.dirname(paper_dir), "data")
+    os.makedirs(data_dir, exist_ok=True)
+    cifar_df = pd.DataFrame([
+        {"Quantity": "Bootstrap Instability", "Pearson": float(np.mean(pearson_sd)), "Spearman": float(np.mean(spearman_sd))},
+        {"Quantity": "Annotator Disagreement", "Pearson": float(np.mean(pearson_dis)), "Spearman": float(np.mean(spearman_dis))},
+        {"Quantity": "Annotator Entropy", "Pearson": float(np.mean(pearson_ent)), "Spearman": float(np.mean(spearman_ent))},
+    ])
+    cifar_csv_path = os.path.join(data_dir, "table_cifar_correlations.csv")
+    cifar_df.to_csv(cifar_csv_path, index=False)
+    print(f"CIFAR correlations CSV saved to {cifar_csv_path}")
+
     # Output LaTeX table for CIFAR correlations
     cifar_table_path = os.path.join(paper_dir, 'table_cifar_correlations.tex')
     with open(cifar_table_path, 'w') as f:
         f.write("\\begin{table}[htbp]\n")
         f.write("\\centering\n")
-        f.write("\\caption{Macro-averaged Pearson and Spearman correlations of Venn--Abers interval width with bootstrap instability, annotator disagreement, and annotator entropy on the simulated CIFAR-10H dataset.}\n")
+        f.write("\\caption{Macro-averaged Pearson and Spearman correlations of Venn--Abers interval width with bootstrap instability, annotator disagreement, and annotator entropy in the synthetic CIFAR-10H-inspired crowd-annotation experiment.}\n")
         f.write("\\label{tab:cifar_correlations}\n")
         f.write("\\begin{tabular}{lcc}\n")
         f.write("\\toprule\n")

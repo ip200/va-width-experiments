@@ -1,27 +1,21 @@
 """
 src/plot_figures_6_7.py
 
-Generates publication-quality Figures 6 and 7:
+Generates publication-quality Figures 6 and 7 from canonical data:
   - Figure 6: Controlled local calibration support thinning (UCI Adult, Bank, Spambase)
   - Figure 7: Reverse training support intervention (Base-model uncertainty vs width)
 
 Features:
   - North-East legends with generous y-axis headroom to eliminate any overlap with curve data.
   - Generates both high-resolution PNG (300 DPI) and vector PDF assets.
-  - Automatically checks data directories and caches reverse intervention results.
+  - Reads directly from canonical data/ directory relative to project root.
 """
 
 import os
 import sys
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.ensemble import HistGradientBoostingClassifier
-from sklearn.preprocessing import OrdinalEncoder
-from venn_abers import VennAbers
-import warnings
-warnings.filterwarnings('ignore')
 
 plt.rcParams.update({
     "font.size": 10,
@@ -43,25 +37,8 @@ plt.rcParams.update({
     "lines.markersize": 5.5,
 })
 
-def compute_va_probs(s_cal, y_cal, s_test):
-    p_cal = np.zeros((len(s_cal), 2))
-    p_cal[:, 1] = s_cal
-    p_cal[:, 0] = 1.0 - s_cal
 
-    p_test = np.zeros((len(s_test), 2))
-    p_test[:, 1] = s_test
-    p_test[:, 0] = 1.0 - s_test
-
-    va = VennAbers()
-    va.fit(p_cal, y_cal)
-    _, pred = va.predict_proba(p_test)
-    p0 = pred[:, 0]
-    p1 = pred[:, 1]
-    p_hat = (p0 + p1) / 2.0
-    width = np.maximum(0.0, p1 - p0)
-    return p0, p1, p_hat, width
-
-def plot_figure_6(df_thinning, output_paths):
+def plot_figure_6(df_thinning, paper_dir):
     """
     Plots Figure 6: Controlled local calibration support thinning.
     Panel (a): Mean Venn--Abers width vs. retained local support.
@@ -81,7 +58,7 @@ def plot_figure_6(df_thinning, output_paths):
         mean_by_frac = sub.groupby("retained_fraction").agg({
             "mean_width": "mean",
             "mean_sigma_cal": "mean",
-            "e_model": "mean"
+            "e_model": "mean",
         }).reset_index().sort_values("retained_fraction")
 
         fracs = mean_by_frac["retained_fraction"].values * 100.0
@@ -123,106 +100,15 @@ def plot_figure_6(df_thinning, output_paths):
     ax3.legend(loc="center right", framealpha=0.9)
 
     plt.tight_layout()
-    for p in output_paths:
-        os.makedirs(os.path.dirname(p), exist_ok=True)
-        plt.savefig(p, dpi=300 if p.endswith('.png') else None)
-        print(f"  Saved Figure 6 to {p}")
+    png_path = os.path.join(paper_dir, "real_data_local_support.png")
+    pdf_path = os.path.join(paper_dir, "real_data_local_support.pdf")
+    plt.savefig(png_path, dpi=300)
+    plt.savefig(pdf_path)
     plt.close()
+    print(f"  Saved Figure 6 to {png_path} and {pdf_path}")
 
-def run_or_load_reverse(datasets, seed=42, B_model=100):
-    """
-    Loads precomputed reverse intervention results from CSV if available,
-    or runs the reverse intervention (subsampling training set without replacement).
-    """
-    rev_csv_candidates = [
-        "data/REVERSE_INTERVENTION_RESULTS.csv",
-        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "REVERSE_INTERVENTION_RESULTS.csv"),
-        "/Users/ivanpetej/Projects/va-width-experiments/data/REVERSE_INTERVENTION_RESULTS.csv"
-    ]
-    for c in rev_csv_candidates:
-        if os.path.exists(c):
-            print(f"Loading existing reverse intervention results from {c}...")
-            return pd.read_csv(c)
 
-    print("Running reverse training intervention (subsampling training set, B_model=100)...")
-    from real_data_calibration_support import load_dataset
-    
-    all_reverse = []
-    rng = np.random.default_rng(seed)
-
-    for ds in datasets:
-        print(f"  Dataset: {ds}...")
-        X_tr, y_tr, X_cal, y_cal, X_te, y_te, cat_cols = load_dataset(ds, seed)
-        is_cat = [c in cat_cols for c in X_tr.columns]
-
-        # Initial fit on full train to identify target instances
-        clf_base = HistGradientBoostingClassifier(
-            categorical_features=is_cat,
-            max_depth=4,
-            learning_rate=0.05,
-            max_iter=100,
-            random_state=seed
-        )
-        clf_base.fit(X_tr, y_tr)
-        s_test = clf_base.predict_proba(X_te)[:, 1]
-
-        target_scores = [0.20, 0.35, 0.50, 0.65, 0.80]
-        target_indices = []
-        for t_s in target_scores:
-            idx = int(np.argmin(np.abs(s_test - t_s)))
-            target_indices.append(idx)
-
-        X_tr_arr = X_tr.to_numpy() if hasattr(X_tr, 'to_numpy') else np.array(X_tr)
-        y_tr_arr = np.array(y_tr)
-        n_tr = len(X_tr)
-
-        train_fractions = [1.0, 0.75, 0.50, 0.25]
-        reverse_results = []
-
-        for tr_frac in train_fractions:
-            n_sub = int(n_tr * tr_frac)
-            preds_sub = np.zeros((B_model, len(target_indices)))
-            widths_sub = np.zeros((B_model, len(target_indices)))
-
-            for b in range(B_model):
-                sub_idx = rng.choice(n_tr, size=n_sub, replace=False)
-                clf_sub = HistGradientBoostingClassifier(
-                    categorical_features=is_cat,
-                    max_depth=4,
-                    learning_rate=0.05,
-                    max_iter=100,
-                    random_state=seed + b * 13
-                )
-                clf_sub.fit(X_tr_arr[sub_idx], y_tr_arr[sub_idx])
-                s_test_sub = clf_sub.predict_proba(X_te.iloc[target_indices])[:, 1]
-                s_cal_sub = clf_sub.predict_proba(X_cal)[:, 1]
-                preds_sub[b, :] = s_test_sub
-
-                _, _, _, w_pts = compute_va_probs(s_cal_sub, y_cal, s_test_sub)
-                widths_sub[b, :] = w_pts
-
-            for idx_t, tgt_name in enumerate(["s~0.20", "s~0.35", "s~0.50", "s~0.65", "s~0.80"]):
-                reverse_results.append({
-                    "dataset": ds,
-                    "target_name": tgt_name,
-                    "train_fraction": tr_frac,
-                    "e_model": float(np.std(preds_sub[:, idx_t])),
-                    "mean_width": float(np.mean(widths_sub[:, idx_t])),
-                    "std_width": float(np.std(widths_sub[:, idx_t]))
-                })
-
-        all_reverse.extend(reverse_results)
-
-    df_rev = pd.DataFrame(all_reverse)
-    os.makedirs("data", exist_ok=True)
-    df_rev.to_csv("data/REVERSE_INTERVENTION_RESULTS.csv", index=False)
-    target_repo_data = "/Users/ivanpetej/Projects/va-width-experiments/data"
-    if os.path.exists(target_repo_data):
-        df_rev.to_csv(os.path.join(target_repo_data, "REVERSE_INTERVENTION_RESULTS.csv"), index=False)
-    print("Saved data/REVERSE_INTERVENTION_RESULTS.csv")
-    return df_rev
-
-def plot_figure_7(df_reverse, output_paths):
+def plot_figure_7(df_reverse, paper_dir):
     """
     Plots Figure 7: Reverse training support intervention.
     Panel (a): Base model epistemic SD vs. retained training support.
@@ -240,7 +126,7 @@ def plot_figure_7(df_reverse, output_paths):
         sub_rev = df_reverse[df_reverse["dataset"] == ds]
         rev_agg = sub_rev.groupby("train_fraction").agg({
             "e_model": "mean",
-            "mean_width": "mean"
+            "mean_width": "mean",
         }).reset_index().sort_values("train_fraction")
 
         tr_pct = rev_agg["train_fraction"].values * 100.0
@@ -266,47 +152,28 @@ def plot_figure_7(df_reverse, output_paths):
     ax2.legend(loc="upper right", framealpha=0.9)
 
     plt.tight_layout()
-    for p in output_paths:
-        os.makedirs(os.path.dirname(p), exist_ok=True)
-        plt.savefig(p, dpi=300 if p.endswith('.png') else None)
-        print(f"  Saved Figure 7 to {p}")
+    png_path = os.path.join(paper_dir, "training_support_epistemic.png")
+    pdf_path = os.path.join(paper_dir, "training_support_epistemic.pdf")
+    plt.savefig(png_path, dpi=300)
+    plt.savefig(pdf_path)
     plt.close()
+    print(f"  Saved Figure 7 to {png_path} and {pdf_path}")
+
 
 def main():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    thin_csv = os.path.join(root, "data", "REAL_DATA_RESULTS.csv")
-    if not os.path.exists(thin_csv):
-        thin_csv = "data/REAL_DATA_RESULTS.csv"
-    if not os.path.exists(thin_csv):
-        thin_csv = "/Users/ivanpetej/Projects/va-width-experiments/data/REAL_DATA_RESULTS.csv"
+    data_dir = os.path.join(root, "data")
+    paper_dir = os.path.join(root, "paper")
+    os.makedirs(paper_dir, exist_ok=True)
+
+    thin_csv = os.path.join(data_dir, "REAL_DATA_RESULTS.csv")
     df_thinning = pd.read_csv(thin_csv)
+    plot_figure_6(df_thinning, paper_dir)
 
-    fig6_paths = [
-        os.path.join(root, "paper", "real_data_local_support.png"),
-        os.path.join(root, "paper", "real_data_local_support.pdf")
-    ]
-    target_paper = "/Users/ivanpetej/Projects/va-width-experiments/paper"
-    if os.path.exists(target_paper) and target_paper != os.path.join(root, "paper"):
-        fig6_paths.extend([
-            os.path.join(target_paper, "real_data_local_support.png"),
-            os.path.join(target_paper, "real_data_local_support.pdf")
-        ])
-    plot_figure_6(df_thinning, fig6_paths)
+    rev_csv = os.path.join(data_dir, "REVERSE_INTERVENTION_RESULTS.csv")
+    df_reverse = pd.read_csv(rev_csv)
+    plot_figure_7(df_reverse, paper_dir)
 
-    datasets = ["adult", "bank", "spambase"]
-    df_reverse = run_or_load_reverse(datasets, seed=42, B_model=100)
-
-    fig7_paths = [
-        os.path.join(root, "paper", "training_support_epistemic.png"),
-        os.path.join(root, "paper", "training_support_epistemic.pdf")
-    ]
-    if os.path.exists(target_paper) and target_paper != os.path.join(root, "paper"):
-        fig7_paths.extend([
-            os.path.join(target_paper, "training_support_epistemic.png"),
-            os.path.join(target_paper, "training_support_epistemic.pdf")
-        ])
-    plot_figure_7(df_reverse, fig7_paths)
-    print("Plotting complete for Figures 6 and 7.")
 
 if __name__ == "__main__":
     main()
