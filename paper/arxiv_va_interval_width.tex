@@ -384,7 +384,7 @@
 	We then progressively thin only the calibration observations in that local neighbourhood to retained fractions of $100\%$, $75\%$, $50\%$, $25\%$, and $12.5\%$, leaving all calibration points outside the neighbourhood unchanged. Random thinning is repeated across $R_{\mathrm{thin}} = 100$ replicates. For each thinning fraction, we evaluate the resulting interval width $w$ and estimate pointwise calibration bootstrap instability $\sigma_{\mathrm{cal}}(x) = \mathrm{SD}_b(\hat p_b(x))$ across $B_{\mathrm{cal}} = 100$ bootstrap draws of the thinned calibration set.
 
 	\paragraph{Reverse Intervention on Training Support.}
-	To demonstrate the independence of calibration support from base-model training support, we also conduct a complementary reverse intervention: keeping the calibration and test partitions fixed, we refit the base classifier on progressively smaller training subsets (retained fractions of $100\%$, $75\%$, $50\%$, and $25\%$). We record the response of base-model uncertainty $E_{\mathrm{model}}(x)$ and Venn--Abers width $w(x)$.
+	To distinguish sensitivity to calibration support from sensitivity to base-model training support, we also conduct a complementary reverse intervention: keeping the calibration and test partitions fixed, we refit the base classifier on progressively smaller training subsets (retained fractions of $100\%$, $75\%$, $50\%$, and $25\%$). We record the response of base-model uncertainty $E_{\mathrm{model}}(x)$ and Venn--Abers width $w(x)$.
 
 	% ============================================================
 	\section{Results and Empirical Analysis}
@@ -549,7 +549,7 @@
 	\section{Comparison with Related Calibration Methods}
 	\label{sec:alternatives}
 
-	For comparison, we also look at the sampling variation of three standard post-hoc calibration methods: Isotonic Regression (IR), Platt Scaling (PS), and Histogram Binning (HB). These methods do not produce a Venn--Abers-style interval, so an equivalent local instability measure has to be estimated by resampling.
+	For comparison, we also look at the sampling variation of three standard post-hoc calibration methods: Isotonic Regression (IR), Platt Scaling (PS), and Histogram Binning (HB). These methods do not produce a Venn--Abers-style interval, so an equivalent local instability measure has to be estimated by resampling. For this comparison only, Venn--Abers is represented by its standard log-loss point merge $p_{\mathrm{VA}} = p_1/(1-p_0+p_1)$; this representation is used solely to place Venn--Abers on the same footing as the three alternative methods and does not affect any headline result.
 
 	We use $M=100$ bootstrap samples of a calibration set of size $N=500$ under the monotonic sigmoidal setting. Figure~\ref{fig:calibration_uncertainty_bootstrap} shows the bootstrap standard deviation of the calibrated probabilities for the three alternative methods and for Venn--Abers, together with the Venn--Abers width.
 
