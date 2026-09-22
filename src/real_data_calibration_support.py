@@ -5,8 +5,14 @@ Controlled empirical evaluation of Venn-Abers interval width and calibration
 instability on real tabular benchmarks (UCI Adult, UCI Bank Marketing, UCI Spambase).
 
 Key features:
-  1. Base model uniformity: HistGradientBoostingClassifier(max_depth=4, learning_rate=0.05, max_iter=200)
-     used uniformly for base fit, training bootstrap refits (E_model), and reverse intervention refits.
+  1. Base model uniformity: HistGradientBoostingClassifier(max_depth=4, learning_rate=0.05, max_iter=200,
+     early_stopping=False) used uniformly for base fit, training bootstrap refits (E_model), and reverse
+     intervention refits. early_stopping is explicitly disabled: scikit-learn's default ('auto') turns
+     early stopping on above 10,000 training samples and uses a random internal validation split keyed
+     off random_state, which (a) makes E_model nonzero even when refitting on IDENTICAL data at
+     train_fraction=1.0 in the reverse intervention (an early-stopping artifact of dataset size, not a
+     training-support effect) and (b) means those models may stop before the stated max_iter=200. See
+     Request 1 code review, Priority 3.
   2. Exact Venn-Abers computation via C-optimized isotonic regression (fast_va_scalar).
   3. Proper aggregation over R_thin = 100 independent local thinning replicates, where each thinned set
      is bootstrapped B_cal = 100 times to compute sigma_cal.
@@ -218,6 +224,7 @@ def run_experiment_for_dataset(
         max_depth=4,
         learning_rate=0.05,
         max_iter=200,
+        early_stopping=False,
         random_state=seed,
     )
     base_clf.fit(X_train, y_train)
@@ -243,6 +250,7 @@ def run_experiment_for_dataset(
             max_depth=4,
             learning_rate=0.05,
             max_iter=200,
+            early_stopping=False,
             random_state=seed + b * 7,
         )
         clf_b.fit(X_tr_arr[boot_idx], y_tr_arr[boot_idx])
@@ -328,6 +336,7 @@ def run_experiment_for_dataset(
                 max_depth=4,
                 learning_rate=0.05,
                 max_iter=200,
+                early_stopping=False,
                 random_state=seed + b * 13,
             )
             clf_sub.fit(X_tr_arr[sub_idx], y_tr_arr[sub_idx])

@@ -123,7 +123,7 @@
 		\item If the true label of $x$ were $1$, we insert the pair $(s, 1)$ into the calibration sequence, sort, and fit PAV. Let $p_1(s)$ be the calibrated probability assigned to $s$ under this mapping.
 	\end{enumerate}
 	
-	The Venn--Abers predictor outputs the interval $[p_0(s), p_1(s)]$. By construction, $p_0(s) \le p_1(s)$. As introduced in Section~\ref{sec:intro}, for empirical analyses we summarize the pair by the midpoint $\hat{p}(s)$, while the interval width is $w_n(s)$:
+	The Venn--Abers predictor outputs the interval $[p_0(s), p_1(s)]$. By construction, $p_0(s) < p_1(s)$ strictly: hypothesizing label $1$ can only raise the fitted value at $s$ relative to hypothesizing label $0$, and the two PAV fits assign it to overlapping but distinct level sets. As introduced in Section~\ref{sec:intro}, for empirical analyses we summarize the pair by the midpoint $\hat{p}(s)$, while the interval width is $w_n(s)$:
 	\begin{equation}
 		\hat{p}(s) = \frac{p_0(s) + p_1(s)}{2}, \quad w_n(s) = p_1(s) - p_0(s).
 	\end{equation}
@@ -143,8 +143,8 @@
 	
 	When we insert a test point $s$ with label $y \in \{0, 1\}$, we insert a node in the diagram at the appropriate sorted index $j$.
 	\begin{itemize}
-		\item Inserting $y = 0$ leaves the cumulative sum unchanged for subsequent indices but shifts the index scale.
-		\item Inserting $y = 1$ shifts the cumulative sum up by $1$ for all subsequent indices.
+		\item Inserting $y = 0$ leaves the cumulative sum unchanged for subsequent points but shifts their index by $1$: later CSD points move purely horizontally.
+		\item Inserting $y = 1$ shifts both the index and the cumulative sum of subsequent points by $1$: later CSD points move diagonally, not just upward.
 	\end{itemize}
 	This conceptual relationship is illustrated in Figure~\ref{fig:gcm_illustration}.
 	
@@ -159,24 +159,24 @@
 			\draw[gray, dashed, thick] (0,0) -- (1.5, 0.5);
 			\draw[gray, dashed, thick] (5.5, 2.5) -- (7, 3.8);
 			
-			% Active Block (N=4)
-			\draw[blue, thick] (1.5, 0.5) -- (5.5, 2.5) node[pos=0.7, above left] {Base GCM};
-			
-			% Adding y=1 (pulls slope up)
-			\draw[red, thick, dashed] (1.5, 0.5) -- (5.5, 3.0) node[pos=0.3, above left] {Insert $y=1 \implies p_1$};
-			
-			% Adding y=0 (pulls slope down)
-			\draw[green!60!black, thick, dashed] (1.5, 0.5) -- (5.5, 2.0) node[pos=0.8, below right] {Insert $y=0 \implies p_0$};
-			
-			% Interval Width Bracket
-			\draw[<->, thick] (5.7, 2.0) -- (5.7, 3.0) node[midway, right] {Diff $\approx 1$};
-			
-			% N bracket
+			% Active Block (N=4), pre-insertion
+			\draw[blue, thick] (1.5, 0.5) -- (5.5, 2.5) node[pos=0.2, below] {Base GCM};
+
+			% Adding y=1: subsequent index AND cumulative sum both shift by 1 (diagonal move)
+			\draw[red, thick, dashed] (1.5, 0.5) -- (6.5, 3.5) node[pos=0.35, above] {Insert $y=1 \implies p_1$};
+
+			% Adding y=0: subsequent index shifts by 1, cumulative sum unchanged (horizontal move)
+			\draw[green!60!black, thick, dashed] (1.5, 0.5) -- (6.5, 2.5) node[pos=0.85, below right] {Insert $y=0 \implies p_0$};
+
+			% Interval Width Bracket (both new endpoints share the same shifted index 6.5)
+			\draw[<->, thick] (6.7, 2.5) -- (6.7, 3.5) node[midway, right] {Diff $\approx 1$};
+
+			% N bracket (pre-insertion block size)
 			\draw[<->, thick] (1.5, -0.2) -- (5.5, -0.2) node[midway, fill=white] {Local PAV block size $N_{\mathrm{eff}}$};
 			\draw[dotted, thick] (1.5, 0.5) -- (1.5, -0.2);
-			\draw[dotted, thick] (5.5, 2.0) -- (5.5, -0.2);
+			\draw[dotted, thick] (5.5, 2.5) -- (5.5, -0.2);
 		\end{tikzpicture}
-		\caption{Conceptual illustration of the GCM logic. The test point falls into a local active block of length $N$. Inserting $y=1$ or $y=0$ shifts the local cumulative sum by $1$, altering the GCM slope. Thus, the probability interval width $p_1 - p_0$ is approximately $1/N$.}
+		\caption{Conceptual illustration of the GCM logic. The test point falls into a local active block of length $N$. Inserting the test point shifts the index of every subsequent CSD point by $1$; with hypothesized label $y=1$ this also shifts their cumulative sum up by $1$ (a diagonal move), while $y=0$ leaves the cumulative sum unchanged (a horizontal move). The resulting difference in the GCM slope out to the shifted endpoint gives the probability interval width $p_1 - p_0$, approximately $1/N$.}
 		\label{fig:gcm_illustration}
 	\end{figure}
 	
@@ -325,7 +325,7 @@
 		c^{\frac{2}{2\alpha+1}}.
 		\label{eq:general_order_scaling}
 	\end{equation}
-	The regular case $\alpha=1$ gives the $n^{-2/3}$ rate. An order-two flat or cusp-like regime gives $n^{-4/5}$, while a smooth monotone cubic flat point with first non-zero derivative of order three gives $n^{-6/7}$. This distinction is useful because a twice-differentiable monotone function cannot generally have an interior point with $\theta'(s_0)=0$ and $\theta''(s_0)\ne0$ while remaining monotone on both sides.
+	The regular case $\alpha=1$ gives the $n^{-2/3}$ rate. An order-two flat or kink-like regime gives $n^{-4/5}$, while a smooth monotone cubic flat point with first non-zero derivative of order three gives $n^{-6/7}$. This distinction is useful because a twice-differentiable monotone function cannot have an interior point with $\theta'(s_0)=0$ and $\theta''(s_0)\ne0$ while remaining monotone on both sides.
 	
 	In a genuine monotonicity-violating region, a different regime applies. Let $\theta^*$ denote the population isotonic projection of $\theta$. If $s_0$ lies inside a flat population block $I=[a,b]$ induced by a persistent monotonicity violation, the empirical PAV block contains approximately
 	\begin{equation}
@@ -355,7 +355,7 @@
 	\begin{enumerate}
 		\item \textbf{Idealised Sample-Size Scaling (Figure~\ref{fig:idealised_scaling}):} To test the pure sample-size scaling exponents ($-2/3$ for interval width and $-1/3$ for pointwise standard deviation and $U_{\mathrm{cal}}$), we generate scores $S \sim U[0,1]$ with $Y\mid S=s\sim\operatorname{Bernoulli}(0.2+0.6s)$. We evaluate a fixed interior score $s_0=0.5$ at calibration sizes $n\in\{500,1000,2000,4000,8000,16000,32000\}$ using $R=200$ independent Monte Carlo repetitions per sample size.
 		\item \textbf{Multivariate Asymptotic Scaling ($W_2$ Factorial Design, Table~\ref{tab:exponent_convergence} and Equation~\ref{eq:pooled_w2}):} To verify the joint dependence on score density $f(s)$, Bernoulli variance $v(s)=\theta(s)(1-\theta(s))$, and curve derivative $\theta'(s)$ in Equation~\ref{eq:scaling_law_final}, we use four score-density families (uniform, centered truncated Gaussian, shifted truncated Gaussian, and asymmetric Beta), six monotone probability curves (four sigmoidal variants and two power curves), and 14 interior evaluation scores $s\in[-0.65,0.65]$. We evaluate calibration sizes $n\in\{500,1000,2000,4000,8000,16000,32000\}$, with the number of Monte Carlo repetitions decreasing from eight at the smaller sizes to two at $n=32000$.
-		\item \textbf{Non-Monotonic Geometric Regimes (Figure~\ref{fig:non_monotonic_scaling_laws}):} To evaluate the effect of monotonicity violations and higher-order local geometry, we use scores $S\sim U[-1,1]$ under four regimes: regular monotonic, globally decreasing, a middle-peak monotonicity violation, and an order-two monotone flat/cusp regime. We use calibration sizes $n\in\{100,200,400,800,1600,3200\}$ with $R=500$ Monte Carlo repetitions per size.
+		\item \textbf{Non-Monotonic Geometric Regimes (Figure~\ref{fig:non_monotonic_scaling_laws}):} To evaluate the effect of monotonicity violations and higher-order local geometry, we use scores $S\sim U[-1,1]$ under four regimes: regular monotonic, globally decreasing, a middle-peak monotonicity violation, and an order-two monotone flat/kink regime. We use calibration sizes $n\in\{100,200,400,800,1600,3200\}$ with $R=500$ Monte Carlo repetitions per size.
 	\end{enumerate}
 	
 
@@ -396,7 +396,7 @@
 	
 	\input{table_calibration_resampling.tex}
 	
-	Table~\ref{tab:calibration_resampling} shows that both quantities decrease as the calibration set becomes larger. The correlation between width and resampling SD is high across all calibration sizes in this experiment, ranging from about 0.92 to 0.97.
+	Table~\ref{tab:calibration_resampling} shows that both quantities decrease as the calibration set becomes larger. The correlation between width and resampling SD is high across all calibration sizes in this experiment, ranging from about 0.86 to 0.92.
 	
 	We next look at individual test points. Equation~\ref{eq:variance_width_relation} suggests that raw width alone is not on the same scale as the standard deviation of the calibrated probability, since the Bernoulli variance also enters the calculation. In a classifier-based bootstrap experiment at $N = 500$, the index $U_{\mathrm{cal}}=\sqrt{\hat p(1-\hat p)w}$ has Pearson correlation $\UCalPearson{}$ with bootstrap SD, compared with $\WidthPearson{}$ for raw width. The corresponding Spearman correlations are $\UCalSpearman{}$ and $\WidthSpearman{}$. In a held-out multiplicative fit, the mean absolute error falls from $\WidthMAE{}$ for width to $\UCalMAE{}$ for $U_{\mathrm{cal}}$. The results suggest that $U_{\mathrm{cal}}$ is a better probability-scale summary than width alone in this experiment. We do not use either quantity as an exact pointwise standard error.
 	
@@ -469,14 +469,14 @@
 		\item \textbf{Regime A (Standard Monotonic):} $\theta(s) = 0.5 + 0.3 s$ (positive slope $\theta' = 0.3$). The empirical exponent of width vs $N$ is $\NonMonoRegimeASlope{}$, matching the theoretical exponent of $-2/3 \approx -0.667$.
 		\item \textbf{Regime B (Monotonicity-Violating):} $\theta(s) = 0.5 - 0.3 s$ (negative slope $\theta' = -0.3$). Because the probability decreases, the PAV algorithm merges all points into a single block containing a non-vanishing fraction of the $N$ calibration observations. The empirical exponent is $\NonMonoRegimeBSlope{}$, matching the theoretical value of $-1.000$.
 		\item \textbf{Regime C (Local Extremum with Violation):} $\theta(s) = 0.5 - 0.4 s^2$ on $s \in [-1, 1]$ (parabolic middle peak, $\theta'(0) = 0$). Here, the right half ($s > 0$) decreases, violating monotonicity and forcing a macroscopic merge. The peak at $s=0.0$ is merged into this violating block, and the empirical exponent is $\NonMonoRegimeCSlope{}$, aligning with the $-1.000$ limit.
-		\item \textbf{Regime D (Order-Two Flat/Cusp Regime):} $\theta(s) = 0.5 + 0.4 s^2 \operatorname{sign}(s)$ on $s \in [-1, 1]$. The function is monotone and has local change of order $|s|^2$, but it is not twice differentiable at the origin. Equation~\ref{eq:general_order_scaling} with $\alpha=2$ therefore predicts the $-4/5$ sample-size exponent. The empirical exponent is $\NonMonoRegimeDSlope{}$, close to $-4/5=-0.800$. A smooth monotone cubic flat point would instead correspond to $\alpha=3$ and the $-6/7$ rate.
+		\item \textbf{Regime D (Order-Two Flat/Kink Regime):} $\theta(s) = 0.5 + 0.4 s^2 \operatorname{sign}(s)$ on $s \in [-1, 1]$, equivalently $\theta(s) = 0.5 + 0.4 s|s|$. The function is $C^1$ (continuously differentiable) with local change of order $|s|^2$, but $\theta'$ has a kink at the origin, so $\theta$ is not twice differentiable there. Equation~\ref{eq:general_order_scaling} with $\alpha=2$ therefore predicts the $-4/5$ sample-size exponent. The empirical exponent is $\NonMonoRegimeDSlope{}$, close to $-4/5=-0.800$. A smooth monotone cubic flat point would instead correspond to $\alpha=3$ and the $-6/7$ rate.
 	\end{itemize}
 	These scaling regimes are shown in Figure~\ref{fig:non_monotonic_scaling_laws}.
 	
 	\begin{figure}[ht]
 		\centering
 		\includegraphics[width=0.75\textwidth]{non_monotonic_scaling_laws.png}
-		\caption{Log-log plots of Venn--Abers interval width vs. calibration set size for standard monotonic (Regime A), monotonicity-violating (Regime B), middle-peak violation (Regime C), and order-two flat/cusp (Regime D) setups. The empirical exponents are close to the corresponding predicted rates of $-2/3$, $-1$, $-1$, and $-4/5$.}
+		\caption{Log-log plots of Venn--Abers interval width vs. calibration set size for standard monotonic (Regime A), monotonicity-violating (Regime B), middle-peak violation (Regime C), and order-two flat/kink (Regime D) setups. The empirical exponents are close to the corresponding predicted rates of $-2/3$, $-1$, $-1$, and $-4/5$.}
 		\label{fig:non_monotonic_scaling_laws}
 	\end{figure}
 	
@@ -543,7 +543,7 @@
 
 	\input{table_real_data_nested.tex}
 
-	Across all three datasets, Model~A (score-conditional outcome ambiguity alone) accounts for a large baseline fraction of calibration variability ($R^2$ of $0.8525$ on Adult, $0.9178$ on Bank, and $0.9491$ on Spambase). Adding base-model epistemic uncertainty (Model~B) produces modest improvements. Adding Venn--Abers width $w$ (Model~C) provides additional explanatory power across all three datasets: $\Delta R^2 = +\AdultDeltaRsq{}$ on Adult (95\% bootstrap CI $[\AdultDeltaRsqCILow{}, \AdultDeltaRsqCIHigh{}]$), $\Delta R^2 = +\BankDeltaRsq{}$ on Bank (95\% bootstrap CI $[\BankDeltaRsqCILow{}, \BankDeltaRsqCIHigh{}]$), and $\Delta R^2 = +\SpambaseDeltaRsq{}$ on Spambase (95\% bootstrap CI $[\SpambaseDeltaRsqCILow{}, \SpambaseDeltaRsqCIHigh{}]$). The bootstrap intervals exclude zero, although the lower endpoint for Spambase is very close to zero ($1.65 \times 10^{-5}$). These results are consistent with width containing calibration-support information not accounted for by outcome ambiguity or the base-model bootstrap measure.
+	Across all three datasets, Model~A (score-conditional outcome ambiguity alone) accounts for a large baseline fraction of calibration variability ($R^2$ of $\AdultModelARsq{}$ on Adult, $\BankModelARsq{}$ on Bank, and $\SpambaseModelARsq{}$ on Spambase). Adding base-model epistemic uncertainty (Model~B) produces modest improvements. Adding Venn--Abers width $w$ (Model~C) provides additional explanatory power across all three datasets: $\Delta R^2 = +\AdultDeltaRsq{}$ on Adult (95\% bootstrap CI $[\AdultDeltaRsqCILow{}, \AdultDeltaRsqCIHigh{}]$), $\Delta R^2 = +\BankDeltaRsq{}$ on Bank (95\% bootstrap CI $[\BankDeltaRsqCILow{}, \BankDeltaRsqCIHigh{}]$), and $\Delta R^2 = +\SpambaseDeltaRsq{}$ on Spambase (95\% bootstrap CI $[\SpambaseDeltaRsqCILow{}, \SpambaseDeltaRsqCIHigh{}]$). The bootstrap intervals exclude zero for all three datasets, with the Bank and Spambase lower endpoints closest to zero ($\BankDeltaRsqCILow{}$ and $\SpambaseDeltaRsqCILow{}$ respectively). These results are consistent with width containing calibration-support information not accounted for by outcome ambiguity or the base-model bootstrap measure.
 
 	% ============================================================
 	\section{Comparison with Related Calibration Methods}
@@ -616,30 +616,30 @@
 	
 	In this appendix, we show that the heuristic scaling law proposed in Equation~\ref{eq:scaling_law_final} is invariant under any strictly increasing transformation of the scores.
 	
-	Let $g: \mathbb{R} \to \mathbb{R}$ be a strictly increasing, differentiable function defining a score transformation $s_{\text{new}} = g(s)$. Let $\theta(s)$ and $f(s)$ denote the true probability function and score density under the original score space, respectively. Under the transformed score space:
+	Let $h: \mathbb{R} \to \mathbb{R}$ be a strictly increasing, differentiable function defining a score transformation $s_{\text{new}} = h(s)$ (distinct from the base scoring function $g$ of Section~\ref{sec:setup}, which is held fixed throughout this appendix). Let $\theta(s)$ and $f(s)$ denote the true probability function and score density under the original score space, respectively. Under the transformed score space:
 	\begin{enumerate}
 		\item The true probability function becomes $\theta_{\text{new}}(s_{\text{new}}) = \theta(s)$.
 		\item By the chain rule, the derivative of the true probability with respect to the new score is:
 		\begin{equation}
-			\theta'_{\text{new}}(s_{\text{new}}) = \frac{d\theta_{\text{new}}}{d s_{\text{new}}} = \frac{d\theta}{ds} \frac{ds}{ds_{\text{new}}} = \theta'(s) \cdot \frac{1}{g'(s)}
+			\theta'_{\text{new}}(s_{\text{new}}) = \frac{d\theta_{\text{new}}}{d s_{\text{new}}} = \frac{d\theta}{ds} \frac{ds}{ds_{\text{new}}} = \theta'(s) \cdot \frac{1}{h'(s)}
 		\end{equation}
 		\item The probability density of the scores transforms under change-of-variables as:
 		\begin{equation}
-			f_{\text{new}}(s_{\text{new}}) = f(s) \cdot \left| \frac{ds}{ds_{\text{new}}} \right| = f(s) \cdot \frac{1}{g'(s)}
+			f_{\text{new}}(s_{\text{new}}) = f(s) \cdot \left| \frac{ds}{ds_{\text{new}}} \right| = f(s) \cdot \frac{1}{h'(s)}
 		\end{equation}
 	\end{enumerate}
-	
+
 	Substituting these transformed terms into the heuristic scaling law (Equation~\ref{eq:scaling_law_final}) for the transformed scores:
 	\begin{align}
 		w(s_{\text{new}}) &\propto f_{\text{new}}(s_{\text{new}})^{-2/3} \cdot (\theta_{\text{new}}(1-\theta_{\text{new}}))^{-1/3} \cdot (\theta'_{\text{new}}(s_{\text{new}}))^{2/3} \\
-		&= \left( \frac{f(s)}{g'(s)} \right)^{-2/3} \cdot (\theta(s)(1-\theta(s)))^{-1/3} \cdot \left( \frac{\theta'(s)}{g'(s)} \right)^{2/3} \\
-		&= f(s)^{-2/3} \cdot (g'(s))^{2/3} \cdot (\theta(s)(1-\theta(s)))^{-1/3} \cdot (\theta'(s))^{2/3} \cdot (g'(s))^{-2/3}
+		&= \left( \frac{f(s)}{h'(s)} \right)^{-2/3} \cdot (\theta(s)(1-\theta(s)))^{-1/3} \cdot \left( \frac{\theta'(s)}{h'(s)} \right)^{2/3} \\
+		&= f(s)^{-2/3} \cdot (h'(s))^{2/3} \cdot (\theta(s)(1-\theta(s)))^{-1/3} \cdot (\theta'(s))^{2/3} \cdot (h'(s))^{-2/3}
 	\end{align}
-	Notice that the derivative factors $(g'(s))^{2/3}$ and $(g'(s))^{-2/3}$ cancel each other exactly:
+	Notice that the derivative factors $(h'(s))^{2/3}$ and $(h'(s))^{-2/3}$ cancel each other exactly:
 	\begin{equation}
 		w(s_{\text{new}}) \propto f(s)^{-2/3} \cdot (\theta(s)(1-\theta(s)))^{-1/3} \cdot (\theta'(s))^{2/3} = w(s)
 	\end{equation}
-	This cancellation shows that the scaling law is mathematically invariant to strictly increasing score transformations (even if the transformation derivative $g'(s)$ varies non-linearly), which is consistent with the rank-ordering nature of the PAV algorithm.
+	This cancellation shows that the scaling law is mathematically invariant to strictly increasing score transformations (even if the transformation derivative $h'(s)$ varies non-linearly), which is consistent with the rank-ordering nature of the PAV algorithm.
 	
 	% ============================================================
 	\section*{Acknowledgements}

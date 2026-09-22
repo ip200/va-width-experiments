@@ -5,7 +5,7 @@ pandas>=2.1.0
 scikit-learn>=1.4.0
 
 # Conformal and Venn-Abers calibration
-venn-abers>=1.5.2
+venn-abers>=1.5.4
 
 # Visualization and plotting
 matplotlib>=3.8.0

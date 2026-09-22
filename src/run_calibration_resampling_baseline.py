@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr
 from sklearn.ensemble import HistGradientBoostingClassifier
-from venn_abers import VennAbersCalibrator
 
 # Add current/parent directory to import path
 curr_dir = os.path.dirname(os.path.abspath(__file__))
@@ -26,7 +25,15 @@ if curr_dir not in sys.path:
 if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
-from utils import clip01, true_probability_1d, set_seed, extract_va_outputs, make_base_model
+from utils import clip01, true_probability_1d, set_seed, make_base_model
+from fast_venn_abers import exact_va_probs
+
+# Note: computes Venn-Abers directly on the fixed base classifier's scores via
+# exact_va_probs rather than routing through VennAbersCalibrator(cal_size=None),
+# which internally refits a clone of the base estimator on whatever is passed
+# to .fit() and additionally splits it 75/25 (sklearn's train_test_split
+# default), so it silently used only ~25% of each calibration resample --
+# see Request 1 code review, Priority 1.
 
 
 def run_calibration_resampling_baseline(
@@ -55,7 +62,8 @@ def run_calibration_resampling_baseline(
     # 3. Fit Fixed Base Classifier
     base_clf = make_base_model(seed=seed)
     base_clf.fit(X_train, y_train)
-    
+    s_test = base_clf.predict_proba(X_test)[:, 1]
+
     records = []
     
     for n_cal in n_cals:
@@ -70,13 +78,10 @@ def run_calibration_resampling_baseline(
             x_cal = resample_rng.uniform(-2.0, 2.0, size=n_cal)
             p_cal = true_probability_1d(x_cal)
             y_cal = resample_rng.binomial(1, clip01(p_cal))
-            
-            va = VennAbersCalibrator(estimator=base_clf, inductive=True, cal_size=None, random_state=seed + m)
-            va.fit(x_cal.reshape(-1, 1), y_cal)
-            
-            pred = va.predict_proba(X_test, p0_p1_output=True)
-            p0, p1, p_mid, p_va, w = extract_va_outputs(pred)
-            
+
+            s_cal = base_clf.predict_proba(x_cal.reshape(-1, 1))[:, 1]
+            p0, p1, p_mid, w = exact_va_probs(s_cal, y_cal, s_test)
+
             all_pmids[m, :] = p_mid
             all_widths[m, :] = w
             briers.append(float(np.mean((p_mid - y_test) ** 2)))

@@ -28,12 +28,27 @@ void c_calc_p0p1(
     
     double grad1 = 0.0;
     int c_point1 = 0;
-    
+
     for (int i = 0; i < n_pts; i++) {
         P1_x[i] -= 1.0;
         P1_y[i] -= 1.0;
-        
-        if (i == 0) {
+
+        if (i == n_pts - 1) {
+            /* Test point inserted strictly after every calibration point,
+             * hypothesized label 1. A point whose own label is the maximum
+             * possible value (1) can never violate isotonicity with respect
+             * to anything to its left (block averages of 0/1 data are always
+             * <= 1), so it always stands alone as its own top block and the
+             * exact value here is 1.0 regardless of the data preceding it.
+             * The general lookahead logic below has no points left of it to
+             * look ahead to (the `for (k = i+1; ...)` window is empty), so
+             * it must be special-cased rather than left to fall through
+             * (which would otherwise silently carry over a stale slope from
+             * an earlier point -- this is exactly the regression that crept
+             * back in when this special case was briefly removed). */
+            out_p1[i] = 1.0;
+            c_point1 = i;
+        } else if (i == 0) {
             double min_g = 1e300;
             for (int k = 1; k < n_pts; k++) {
                 double dx = P1_x[k];
@@ -97,18 +112,22 @@ void c_calc_p0p1(
             grad0 = max_g;
             out_p0[i] = grad0;
             c_point0 = i;
+        } else if (i == 0) {
+            out_p0[0] = 0.0;
+            c_point0 = 0;
         } else {
             double imp_point = P0_y[c_point0] + (P0_x[i] - P0_x[c_point0]) * grad0;
             if (P0_y[i] < imp_point) {
                 double max_g = -1e300;
+                int found = 0;
                 for (int k = 0; k < i; k++) {
                     double dx = P0_x[k] - P0_x[i];
                     if (dx != 0) {
                         double g = (P0_y[k] - P0_y[i]) / dx;
-                        if (g > max_g) max_g = g;
+                        if (g > max_g) { max_g = g; found = 1; }
                     }
                 }
-                grad0 = max_g;
+                if (found) grad0 = max_g;
                 c_point0 = i;
                 out_p0[i] = grad0;
             } else {

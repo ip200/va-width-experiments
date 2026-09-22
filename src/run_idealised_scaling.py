@@ -23,8 +23,6 @@ import pandas as pd
 from scipy.stats import linregress, t
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-from sklearn.base import BaseEstimator, ClassifierMixin
-from venn_abers import VennAbersCalibrator
 
 # Add current/parent directory to import path
 curr_dir = os.path.dirname(os.path.abspath(__file__))
@@ -34,27 +32,18 @@ if curr_dir not in sys.path:
 if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
-from utils import extract_va_outputs, set_seed
+from utils import set_seed
+from fast_venn_abers import exact_va_probs
 
-
-class Identity1DEstimator(BaseEstimator, ClassifierMixin):
-    """Preserves 1D score rank order for Venn-Abers calibration."""
-    def fit(self, X, y=None):
-        self.classes_ = np.array([0, 1])
-        self.is_fitted_ = True
-        return self
-
-    def predict_proba(self, X):
-        X_arr = np.asarray(X)
-        if X_arr.ndim == 2:
-            s = X_arr[:, 0]
-        else:
-            s = X_arr
-        p1 = np.clip(s, 0.0, 1.0)
-        return np.column_stack([1.0 - p1, p1])
-
-    def predict(self, X):
-        return (self.predict_proba(X)[:, 1] >= 0.5).astype(int)
+# Note: this experiment's "base model" is the identity map (the calibration
+# score IS s, clipped to [0, 1]), so we compute Venn-Abers directly on the
+# raw scores via exact_va_probs rather than routing through
+# VennAbersCalibrator(cal_size=None), which previously split the n_cal
+# calibration draw 75/25 (via sklearn's train_test_split default) and used
+# only the 25% "cal" portion -- see Request 1 code review, Priority 1. That
+# bug only mislabelled n_cal here (true n was n_cal/4), since the identity
+# estimator has no state to corrupt by refitting, but it's fixed anyway for
+# correctness of the reported n_cal values.
 
 
 def run_idealised_scaling_experiment(
@@ -68,10 +57,7 @@ def run_idealised_scaling_experiment(
     """
     print(f"Running idealised scaling experiment (R={n_reps}, s0={s0}, seed={seed})...")
     rng = set_seed(seed)
-    
-    base_estimator = Identity1DEstimator().fit(None, None)
-    X_eval = np.array([[s0]])
-    
+
     records = []
     
     for n_cal in n_cal_list:
@@ -84,14 +70,10 @@ def run_idealised_scaling_experiment(
             s_cal = rng.uniform(0.0, 1.0, size=n_cal)
             p_true = 0.2 + 0.6 * s_cal
             y_cal = rng.binomial(1, p_true)
-            
-            va = VennAbersCalibrator(estimator=base_estimator, inductive=True, cal_size=None)
-            va.fit(s_cal.reshape(-1, 1), y_cal)
-            
-            pred = va.predict_proba(X_eval, p0_p1_output=True)
-            p0, p1, p_mid, p_va, w = extract_va_outputs(pred)
-            
-            pm = p_mid[0]
+
+            p0, p1, _, w = exact_va_probs(s_cal, y_cal, np.array([s0]))
+
+            pm = 0.5 * (p0[0] + p1[0])
             width_val = w[0]
             ucal_val = np.sqrt(pm * (1.0 - pm) * width_val)
             
