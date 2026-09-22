@@ -99,3 +99,40 @@ def test_boundary_and_scalar_equivalence():
         assert abs(p0_sc - p0_exp[0]) < 1e-12
         assert abs(p1_sc - p1_exp[0]) < 1e-12
         assert abs(w_sc - w_exp[0]) < 1e-12
+
+
+def test_beyond_calibration_range_boundary():
+    """
+    Regression test for the C accelerator boundary bug (Request 1 code review,
+    Priority 2): p1 must be exactly 1.0 when the test score exceeds every
+    calibration score (hypothesizing label 1 can never be pooled below its
+    own value, the maximum possible), and symmetrically p0 must be exactly
+    0.0 when the test score is below every calibration score. Before the fix,
+    c_calc_p0p1's forward/backward sweeps fell through to a stale slope (p1)
+    or an uninitialized -1e300 sentinel (p0) at these boundary indices,
+    because the lookahead/lookback window used to find a new GCM segment is
+    empty there.
+    """
+    rng = np.random.RandomState(555)
+    s_cal = rng.uniform(0.1, 0.9, size=150)
+    y_cal = rng.binomial(1, s_cal)
+
+    p0, p1, p_hat, w = exact_va_probs(s_cal, y_cal, np.array([2.0]))
+    assert p1[0] == 1.0, f"p1 should be exactly 1.0 beyond calibration range, got {p1[0]}"
+
+    p0b, p1b, p_hatb, wb = exact_va_probs(s_cal, y_cal, np.array([-2.0]))
+    assert p0b[0] == 0.0, f"p0 should be exactly 0.0 below calibration range, got {p0b[0]}"
+
+    # Also cross-check against the official package directly, over several
+    # random calibration draws, including exact ties at the boundary.
+    for seed in range(20):
+        r = np.random.RandomState(seed)
+        n = r.randint(20, 300)
+        s = r.uniform(0.0, 1.0, size=n)
+        y = r.binomial(1, s)
+        s_test = np.array([s.min(), s.max(), s.min() - 1.0, s.max() + 1.0])
+
+        p0_exp, p1_exp, _, _ = exact_va_probs(s, y, s_test)
+        p0_act, p1_act, _, _ = _eval_official_va(s, y, s_test)
+        np.testing.assert_allclose(p0_exp, p0_act, atol=1e-12, err_msg=f"boundary p0 mismatch seed {seed}")
+        np.testing.assert_allclose(p1_exp, p1_act, atol=1e-12, err_msg=f"boundary p1 mismatch seed {seed}")

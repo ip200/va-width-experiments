@@ -287,6 +287,7 @@ def main():
 \\newcommand{{\\AdultSigmaCalStart}}{{{manifest['figure_6_real_data_thinning']['adult']['sigma_cal_100']:.4f}}}
 \\newcommand{{\\AdultSigmaCalEnd}}{{{manifest['figure_6_real_data_thinning']['adult']['sigma_cal_12_5']:.4f}}}
 \\newcommand{{\\AdultEModel}}{{{manifest['figure_6_real_data_thinning']['adult']['e_model']:.4f}}}
+\\newcommand{{\\AdultModelARsq}}{{{manifest['table_4_real_data_nested']['adult']['model_a_r2']:.4f}}}
 \\newcommand{{\\AdultDeltaRsq}}{{{manifest['table_4_real_data_nested']['adult']['delta_r2']:.4f}}}
 \\newcommand{{\\AdultDeltaRsqCILow}}{{{manifest['table_4_real_data_nested']['adult']['delta_r2_ci_lower']:.4f}}}
 \\newcommand{{\\AdultDeltaRsqCIHigh}}{{{manifest['table_4_real_data_nested']['adult']['delta_r2_ci_upper']:.4f}}}
@@ -297,6 +298,7 @@ def main():
 \\newcommand{{\\BankSigmaCalStart}}{{{manifest['figure_6_real_data_thinning']['bank']['sigma_cal_100']:.4f}}}
 \\newcommand{{\\BankSigmaCalEnd}}{{{manifest['figure_6_real_data_thinning']['bank']['sigma_cal_12_5']:.4f}}}
 \\newcommand{{\\BankEModel}}{{{manifest['figure_6_real_data_thinning']['bank']['e_model']:.4f}}}
+\\newcommand{{\\BankModelARsq}}{{{manifest['table_4_real_data_nested']['bank']['model_a_r2']:.4f}}}
 \\newcommand{{\\BankDeltaRsq}}{{{manifest['table_4_real_data_nested']['bank']['delta_r2']:.4f}}}
 \\newcommand{{\\BankDeltaRsqCILow}}{{{manifest['table_4_real_data_nested']['bank']['delta_r2_ci_lower']:.4f}}}
 \\newcommand{{\\BankDeltaRsqCIHigh}}{{{manifest['table_4_real_data_nested']['bank']['delta_r2_ci_upper']:.4f}}}
@@ -307,6 +309,7 @@ def main():
 \\newcommand{{\\SpambaseSigmaCalStart}}{{{manifest['figure_6_real_data_thinning']['spambase']['sigma_cal_100']:.4f}}}
 \\newcommand{{\\SpambaseSigmaCalEnd}}{{{manifest['figure_6_real_data_thinning']['spambase']['sigma_cal_12_5']:.4f}}}
 \\newcommand{{\\SpambaseEModel}}{{{manifest['figure_6_real_data_thinning']['spambase']['e_model']:.4f}}}
+\\newcommand{{\\SpambaseModelARsq}}{{{manifest['table_4_real_data_nested']['spambase']['model_a_r2']:.4f}}}
 \\newcommand{{\\SpambaseDeltaRsq}}{{{manifest['table_4_real_data_nested']['spambase']['delta_r2']:.4f}}}
 \\newcommand{{\\SpambaseDeltaRsqCILow}}{{{manifest['table_4_real_data_nested']['spambase']['delta_r2_ci_lower']:.4f}}}
 \\newcommand{{\\SpambaseDeltaRsqCIHigh}}{{{manifest['table_4_real_data_nested']['spambase']['delta_r2_ci_upper']:.4f}}}
