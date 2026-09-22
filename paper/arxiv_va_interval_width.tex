@@ -255,6 +255,8 @@
 	\end{proposition}
 	
 	The proposition is intended as an asymptotic scaling relationship rather than a formal limit theorem. Its $n^{-2/3}$ block-influence rate is also consistent with the standard $n^{-1/3}$ pointwise rate of isotonic regression: the interval width behaves like inverse local block size, whereas the fitted block mean fluctuates on the square-root scale of that inverse block size.
+
+	Equation~\ref{eq:scaling_law_final} can also be reached as a corollary of the same balance stated once in the score scale where the calibration curve is the identity, where the $\theta'(s)$ factor is absent by construction; Appendix~\ref{sec:appendix_invariance} gives this route and uses it to show that Equation~\ref{eq:scaling_law_final} is automatically invariant under strictly increasing score transformations.
 	
 	\subsection{From Interval Width to Probability-Scale Calibration Instability}
 	\label{subsec:ucal_theory}
@@ -325,7 +327,7 @@
 		c^{\frac{2}{2\alpha+1}}.
 		\label{eq:general_order_scaling}
 	\end{equation}
-	The regular case $\alpha=1$ gives the $n^{-2/3}$ rate. An order-two flat or kink-like regime gives $n^{-4/5}$, while a smooth monotone cubic flat point with first non-zero derivative of order three gives $n^{-6/7}$. This distinction is useful because a twice-differentiable monotone function cannot have an interior point with $\theta'(s_0)=0$ and $\theta''(s_0)\ne0$ while remaining monotone on both sides.
+	The regular case $\alpha=1$ gives the $n^{-2/3}$ rate. An order-two flat or kink-like regime gives $n^{-4/5}$, while a smooth monotone cubic flat point with first non-zero derivative of order three gives $n^{-6/7}$. This distinction is useful because a twice-differentiable monotone function cannot have an interior point with $\theta'(s_0)=0$ and $\theta''(s_0)\ne0$ while remaining monotone on both sides. As shown in Appendix~\ref{sec:appendix_invariance}, Equation~\ref{eq:general_order_scaling} is not a separate calculation from Equation~\ref{eq:scaling_law_final}: both follow from the same balance in the canonical score scale, at general $\alpha$ and at $\alpha=1$ respectively.
 	
 	In a genuine monotonicity-violating region, a different regime applies. Let $\theta^*$ denote the population isotonic projection of $\theta$. If $s_0$ lies inside a flat population block $I=[a,b]$ induced by a persistent monotonicity violation, the empirical PAV block contains approximately
 	\begin{equation}
@@ -613,34 +615,50 @@
 	\appendix
 	\section{Invariance of the Scaling Law Under Score Transformations}
 	\label{sec:appendix_invariance}
-	
-	In this appendix, we show that the heuristic scaling law proposed in Equation~\ref{eq:scaling_law_final} is invariant under any strictly increasing transformation of the scores.
-	
-	Let $h: \mathbb{R} \to \mathbb{R}$ be a strictly increasing, differentiable function defining a score transformation $s_{\text{new}} = h(s)$ (distinct from the base scoring function $g$ of Section~\ref{sec:setup}, which is held fixed throughout this appendix). Let $\theta(s)$ and $f(s)$ denote the true probability function and score density under the original score space, respectively. Under the transformed score space:
-	\begin{enumerate}
-		\item The true probability function becomes $\theta_{\text{new}}(s_{\text{new}}) = \theta(s)$.
-		\item By the chain rule, the derivative of the true probability with respect to the new score is:
-		\begin{equation}
-			\theta'_{\text{new}}(s_{\text{new}}) = \frac{d\theta_{\text{new}}}{d s_{\text{new}}} = \frac{d\theta}{ds} \frac{ds}{ds_{\text{new}}} = \theta'(s) \cdot \frac{1}{h'(s)}
-		\end{equation}
-		\item The probability density of the scores transforms under change-of-variables as:
-		\begin{equation}
-			f_{\text{new}}(s_{\text{new}}) = f(s) \cdot \left| \frac{ds}{ds_{\text{new}}} \right| = f(s) \cdot \frac{1}{h'(s)}
-		\end{equation}
-	\end{enumerate}
 
-	Substituting these transformed terms into the heuristic scaling law (Equation~\ref{eq:scaling_law_final}) for the transformed scores:
-	\begin{align}
-		w(s_{\text{new}}) &\propto f_{\text{new}}(s_{\text{new}})^{-2/3} \cdot (\theta_{\text{new}}(1-\theta_{\text{new}}))^{-1/3} \cdot (\theta'_{\text{new}}(s_{\text{new}}))^{2/3} \\
-		&= \left( \frac{f(s)}{h'(s)} \right)^{-2/3} \cdot (\theta(s)(1-\theta(s)))^{-1/3} \cdot \left( \frac{\theta'(s)}{h'(s)} \right)^{2/3} \\
-		&= f(s)^{-2/3} \cdot (h'(s))^{2/3} \cdot (\theta(s)(1-\theta(s)))^{-1/3} \cdot (\theta'(s))^{2/3} \cdot (h'(s))^{-2/3}
-	\end{align}
-	Notice that the derivative factors $(h'(s))^{2/3}$ and $(h'(s))^{-2/3}$ cancel each other exactly:
+	The heuristic scaling law of Equation~\ref{eq:scaling_law_final} is invariant under any strictly increasing transformation of the scores. We give two routes to this fact. First, invariance already holds for the underlying Venn--Abers procedure itself, exactly, for reasons that have nothing to do with the asymptotic block-size argument. Second, using this fact together with the score transformation $h=\theta$ shows that the general form of Equation~\ref{eq:scaling_law_final} is not an independent result requiring its own invariance check, but a corollary of the same law stated once, in the scale where the calibration curve is the identity.
+
+	\subsection{Exact Invariance of the Venn--Abers Output}
+
+	Let $h:\mathbb{R}\to\mathbb{R}$ be any strictly increasing function (distinct from the base scoring function $g$ of Section~\ref{sec:setup}, which is held fixed throughout this appendix) and let $s_{\text{new}}=h(s)$. Because $h$ is strictly increasing it is injective and order-preserving: for any two scores, $s_i<s_j \iff h(s_i)<h(s_j)$, and $s_i=s_j \iff h(s_i)=h(s_j)$. The PAV fits underlying $p_0(s)$ and $p_1(s)$ (Section~\ref{sec:venn_abers}) are computed entirely from the sorted order of the calibration scores, the tie structure among them, and the rank at which the test score is inserted; the numerical values of the scores play no other role. Consequently $h$ leaves every sort order, tie group, and insertion rank unchanged, so
 	\begin{equation}
-		w(s_{\text{new}}) \propto f(s)^{-2/3} \cdot (\theta(s)(1-\theta(s)))^{-1/3} \cdot (\theta'(s))^{2/3} = w(s)
+		p_0(h(s)) = p_0(s), \qquad p_1(h(s)) = p_1(s),
+		\label{eq:exact_invariance}
 	\end{equation}
-	This cancellation shows that the scaling law is mathematically invariant to strictly increasing score transformations (even if the transformation derivative $h'(s)$ varies non-linearly), which is consistent with the rank-ordering nature of the PAV algorithm.
-	
+	for the transformed calibration and test scores. This is an exact statement about the finite-sample Venn--Abers predictor, not merely about its asymptotic scaling law: the interval $[p_0,p_1]$ itself, not just Equation~\ref{eq:scaling_law_final}, is unchanged by any strictly increasing reparametrization of the scores.
+
+	\subsection{The Scaling Law in Canonical Form}
+
+	Equation~\ref{eq:exact_invariance} means the scaling law can be derived once, in a convenient reparametrization, with the general form recovered as a corollary. Suppose $\theta$ is strictly increasing on a neighbourhood of $s$, as already required for $\theta'(s)>0$ in Proposition~1, and let $h=\theta$ on that neighbourhood, defining canonical scores $P=\theta(S)$. Because $Y\mid S=s\sim\text{Bernoulli}(\theta(s))$ and $P=\theta(S)$ is a bijection there, $Y\mid P=p\sim\text{Bernoulli}(p)$ exactly: in canonical scale the calibration curve is the identity, $\theta_{\text{new}}(p)=p$ and $\theta_{\text{new}}'(p)=1$. By the usual change-of-variables rule, the canonical score density is
+	\begin{equation}
+		\varphi(\theta(s)) = \frac{f(s)}{\theta'(s)}.
+		\label{eq:canonical_density}
+	\end{equation}
+	Substituting $\theta_{\text{new}}'=1$ into Equation~\ref{eq:scaling_law_final} removes the slope factor entirely, giving the simplified law
+	\begin{equation}
+		w_n(p) \propto n^{-2/3}\varphi(p)^{-2/3}[p(1-p)]^{-1/3},
+		\label{eq:simplified_law}
+	\end{equation}
+	stated directly in the scale where the calibration curve is the identity, so no invariance question arises for it. Equation~\ref{eq:exact_invariance} guarantees $w_n(s)=w_n(\theta(s))$, so substituting Equation~\ref{eq:canonical_density} and $p=\theta(s)$ back into Equation~\ref{eq:simplified_law} recovers
+	\begin{equation}
+		w_n(s) \propto n^{-2/3}\left(\frac{f(s)}{\theta'(s)}\right)^{-2/3}[\theta(s)(1-\theta(s))]^{-1/3} = n^{-2/3}f(s)^{-2/3}[\theta(s)(1-\theta(s))]^{-1/3}[\theta'(s)]^{2/3},
+		\label{eq:general_law_corollary}
+	\end{equation}
+	which is exactly Equation~\ref{eq:scaling_law_final}. The general scaling law is thus a corollary of Equation~\ref{eq:simplified_law} under $h=\theta$, rather than a separate result whose invariance under score transformations must be checked afterwards. Equation~\ref{eq:canonical_density} only requires $\theta'(s)\ne0$ locally near $s$; where $\theta$ is not globally monotone, $h$ need only agree with $\theta$ in a neighbourhood of $s$, since Proposition~1 is itself a purely local statement.
+
+	\subsection{Flat Points and the General-Order Regime}
+
+	The same canonical construction extends to the flat-point regime of Section~\ref{subsec:non_monotonic_theory}. If $\theta(s_0+u)-\theta(s_0)\asymp c\,\operatorname{sign}(u)|u|^{\alpha}$ for $\alpha>1$, then $h=\theta$ is still strictly increasing through $s_0$, so Equation~\ref{eq:exact_invariance} still applies, but $\theta'(s_0)=0$ and the canonical density is now singular at $p_0=\theta(s_0)$:
+	\begin{equation}
+		\varphi(q) \asymp f(s_0)\,c^{-1/\alpha}\,|q-p_0|^{1/\alpha-1}.
+		\label{eq:singular_density}
+	\end{equation}
+	In canonical scale the calibration curve is still exactly the identity, so the local balance has no systematic-slope term to cancel; it is driven entirely by the singular local mass $N(\Delta)=n\int_{p_0-\Delta}^{p_0+\Delta}\varphi(q)\,dq \asymp nf(s_0)c^{-1/\alpha}\Delta^{1/\alpha}$. Balancing $\Delta$ against $\sqrt{v(p_0)/N(\Delta)}$, and mapping back through Equation~\ref{eq:exact_invariance} and $v(p_0)=v(s_0)$, gives
+	\begin{equation}
+		w_n(s_0) \propto [nf(s_0)]^{-\frac{2\alpha}{2\alpha+1}}v(s_0)^{-\frac{1}{2\alpha+1}}c^{\frac{2}{2\alpha+1}},
+	\end{equation}
+	which is exactly Equation~\ref{eq:general_order_scaling}. Equations~\ref{eq:scaling_law_final} and~\ref{eq:general_order_scaling} are therefore not two derivations connected only by a shared heuristic style: they are the same canonical bias--noise balance at $\alpha=1$ and at general $\alpha$, respectively. Both remain heuristic in the same sense as Proposition~1 -- the canonical reparametrization removes the invariance question, not the informality of the local bias--noise balance itself. The genuine monotonicity-violation regime of Equation~\ref{eq:scaling_law_violation} is unaffected by this construction: there $\theta$ is non-monotone on $I$, so no strictly increasing $h$ agreeing with $\theta$ on $I$ exists, and the population-level pooling argument of that regime applies instead.
+
 	% ============================================================
 	\section*{Acknowledgements}
 
