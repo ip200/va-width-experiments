@@ -1,26 +1,32 @@
 \begin{table}[htbp]
 \centering
 \small
-\caption{Held-out real-data comparison of calibration-instability models across three public tabular benchmarks ($N=500$ test points, $B_{\mathrm{cal}}=200$ resamples). Model A uses score-conditional outcome ambiguity $A(x)=\hat p(1-\hat p)$; Model B adds base-model epistemic uncertainty $E_{\mathrm{model}}(x)$; Model C adds Venn--Abers width $w(x)$. Across all datasets, Venn--Abers width provides an additional statistically detectable contribution to explaining calibration instability ($\Delta R^2$, 95\% bootstrap CI over 2,000 resamples), consistent with width capturing calibration-support information distinct from outcome ambiguity and base-model uncertainty.}
+\caption{Held-out real-data comparison of calibration-instability models across three public tabular benchmarks ($N=500$ test points, $B_{\mathrm{cal}}=200$ resamples). Model A uses score-conditional outcome ambiguity $A(x)=\hat p(1-\hat p)$; Model B adds base-model epistemic uncertainty $E_{\mathrm{model}}(x)$; Model C adds Venn--Abers width $w(x)$; Model D replaces $w$ with the theory-predicted composite $u_{\mathrm{cal}}(x)=\sqrt{A(x)\,w(x)}$. All $R^2$ values shown are in-sample and are reported descriptively: because Model C's regressors are a strict superset of Model B's, in-sample $R^2$ cannot decrease when $w$ is added, so the bootstrap CI on $\Delta R^2$(C$-$B) can never exclude zero by chance and is not evidence on its own. The permutation $p$-value (width shuffled against $A, E_{\mathrm{model}}$, 5,000 resamples) and the $10$-fold cross-validated $\Delta R^2$ are the valid, potentially-negative out-of-sample tests of whether $w$ has genuine incremental predictive value.}
 \label{tab:real_data_nested}
 \begin{tabular}{llccc}
 \toprule
-Dataset & Model Specification & $R^2$ & MAE & RMSE \\
+Dataset & Model Specification & $R^2$ (in-sample) & MAE & RMSE \\
 \midrule
-\multirow{4}{*}{UCI Adult} & Model A: Ambiguity $A$ & 0.8339 & 0.0030 & 0.0041 \\
+\multirow{6}{*}{UCI Adult} & Model A: Ambiguity $A$ & 0.8339 & 0.0030 & 0.0041 \\
  & Model B: Ambiguity + $E_{\mathrm{model}}$ & 0.8408 & 0.0029 & 0.0040 \\
  & Model C: Ambiguity + $E_{\mathrm{model}}$ + Width $w$ & \textbf{0.8887} & \textbf{0.0024} & \textbf{0.0034} \\
- & $\Delta R^2$ (Model C $-$ Model B) & \multicolumn{3}{c}{+ 0.0479 [95\% CI: 0.0348, 0.0686]} \\
+ & Model D: Ambiguity + $E_{\mathrm{model}}$ + $u_{\mathrm{cal}}=\sqrt{Aw}$ & 0.9266 & 0.0019 & 0.0027 \\
+ & $\Delta R^2$ in-sample (C $-$ B, descriptive only) & \multicolumn{3}{c}{+ 0.0479 [95\% CI: 0.0348, 0.0686]} \\
+ & $\Delta R^2$ 10-fold CV (C $-$ B) / permutation $p$ & \multicolumn{3}{c}{+ 0.0317 / $p=0.0000$} \\
 \midrule
-\multirow{4}{*}{UCI Bank} & Model A: Ambiguity $A$ & 0.9484 & 0.0016 & 0.0024 \\
+\multirow{6}{*}{UCI Bank} & Model A: Ambiguity $A$ & 0.9484 & 0.0016 & 0.0024 \\
  & Model B: Ambiguity + $E_{\mathrm{model}}$ & 0.9485 & 0.0016 & 0.0024 \\
  & Model C: Ambiguity + $E_{\mathrm{model}}$ + Width $w$ & \textbf{0.9547} & \textbf{0.0015} & \textbf{0.0023} \\
- & $\Delta R^2$ (Model C $-$ Model B) & \multicolumn{3}{c}{+ 0.0062 [95\% CI: 0.0015, 0.0192]} \\
+ & Model D: Ambiguity + $E_{\mathrm{model}}$ + $u_{\mathrm{cal}}=\sqrt{Aw}$ & 0.9621 & 0.0013 & 0.0021 \\
+ & $\Delta R^2$ in-sample (C $-$ B, descriptive only) & \multicolumn{3}{c}{+ 0.0062 [95\% CI: 0.0015, 0.0192]} \\
+ & $\Delta R^2$ 10-fold CV (C $-$ B) / permutation $p$ & \multicolumn{3}{c}{+ 0.0033 / $p=0.0000$} \\
 \midrule
-\multirow{4}{*}{UCI Spambase} & Model A: Ambiguity $A$ & 0.9548 & 0.0029 & 0.0046 \\
+\multirow{6}{*}{UCI Spambase} & Model A: Ambiguity $A$ & 0.9548 & 0.0029 & 0.0046 \\
  & Model B: Ambiguity + $E_{\mathrm{model}}$ & 0.9626 & 0.0026 & 0.0042 \\
  & Model C: Ambiguity + $E_{\mathrm{model}}$ + Width $w$ & \textbf{0.9665} & \textbf{0.0024} & \textbf{0.0040} \\
- & $\Delta R^2$ (Model C $-$ Model B) & \multicolumn{3}{c}{+ 0.0039 [95\% CI: 0.0014, 0.0075]} \\
+ & Model D: Ambiguity + $E_{\mathrm{model}}$ + $u_{\mathrm{cal}}=\sqrt{Aw}$ & 0.9696 & 0.0023 & 0.0038 \\
+ & $\Delta R^2$ in-sample (C $-$ B, descriptive only) & \multicolumn{3}{c}{+ 0.0039 [95\% CI: 0.0014, 0.0075]} \\
+ & $\Delta R^2$ 10-fold CV (C $-$ B) / permutation $p$ & \multicolumn{3}{c}{+ 0.0034 / $p=0.0000$} \\
 \bottomrule
 \end{tabular}
 \end{table}

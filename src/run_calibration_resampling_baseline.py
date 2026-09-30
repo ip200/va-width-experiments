@@ -32,8 +32,7 @@ from fast_venn_abers import exact_va_probs
 # exact_va_probs rather than routing through VennAbersCalibrator(cal_size=None),
 # which internally refits a clone of the base estimator on whatever is passed
 # to .fit() and additionally splits it 75/25 (sklearn's train_test_split
-# default), so it silently used only ~25% of each calibration resample --
-# see Request 1 code review, Priority 1.
+# default), so it silently used only ~25% of each calibration resample.
 
 
 def run_calibration_resampling_baseline(

@@ -30,8 +30,7 @@ except ImportError:
 # exact_va_probs rather than routing through VennAbersCalibrator(cal_size=None),
 # which internally refits a clone of the base estimator on whatever is passed
 # to .fit() and additionally splits it 75/25 (sklearn's train_test_split
-# default), so it silently used only ~25% of the N_cal=500 calibration set --
-# see Request 1 code review, Priority 1.
+# default), so it silently used only ~25% of the N_cal=500 calibration set.
 
 
 def run_classifier_bootstrap_experiment(

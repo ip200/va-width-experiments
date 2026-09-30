@@ -81,7 +81,7 @@ def plot_figure_6(df_thinning, paper_dir):
     ax1.set_title(r"(a) Calibration width $w$ vs. local support")
     ax1.invert_xaxis()
     ax1.set_ylim(-0.005, 0.27)
-    ax1.legend(loc="upper right", framealpha=0.9)
+    ax1.legend(loc="best", framealpha=0.9)
 
     # Format Panel B - Headroom for North-East legend
     ax2.set_xlabel("Retained local calibration support (%)")
@@ -140,8 +140,8 @@ def plot_figure_7(df_reverse, paper_dir):
     ax1.set_ylabel(r"Model epistemic SD $E_{\mathrm{model}}$")
     ax1.set_title(r"(a) Base model epistemic SD vs. training support")
     ax1.invert_xaxis()
-    ax1.set_ylim(-0.005, 0.185)
-    ax1.legend(loc="upper right", framealpha=0.9)
+    ax1.set_ylim(-0.005, 0.22)
+    ax1.legend(loc="best", framealpha=0.9)
 
     # Format Panel B - North-East legend
     ax2.set_xlabel("Retained training support (%)")

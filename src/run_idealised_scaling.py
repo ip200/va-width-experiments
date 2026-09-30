@@ -40,10 +40,9 @@ from fast_venn_abers import exact_va_probs
 # raw scores via exact_va_probs rather than routing through
 # VennAbersCalibrator(cal_size=None), which previously split the n_cal
 # calibration draw 75/25 (via sklearn's train_test_split default) and used
-# only the 25% "cal" portion -- see Request 1 code review, Priority 1. That
-# bug only mislabelled n_cal here (true n was n_cal/4), since the identity
-# estimator has no state to corrupt by refitting, but it's fixed anyway for
-# correctness of the reported n_cal values.
+# only the 25% "cal" portion. That bug only mislabelled n_cal here (true n
+# was n_cal/4), since the identity estimator has no state to corrupt by
+# refitting, but it's fixed anyway for correctness of the reported n_cal values.
 
 
 def run_idealised_scaling_experiment(
@@ -108,7 +107,7 @@ def run_idealised_scaling_experiment(
     t_crit = t.ppf(0.975, dof)
     
     results = {}
-    for col, name in [("mean_width", "Width"), ("sd_p_mid", "Bootstrap SD"), ("mean_ucal", "U_cal")]:
+    for col, name in [("mean_width", "Width"), ("sd_p_mid", "Monte Carlo SD"), ("mean_ucal", "U_cal")]:
         log_y = np.log(df[col])
         res = linregress(log_n, log_y)
         ci_lower = res.slope - t_crit * res.stderr
@@ -178,7 +177,7 @@ def generate_scaling_plot(df: pd.DataFrame, fits: dict = None):
     ax1.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
     
     # Panel (b): Bootstrap SD and U_cal vs n
-    ax2.loglog(n, sd, "s-", color="#2ca02c", lw=1.8, label="Bootstrap SD")
+    ax2.loglog(n, sd, "s-", color="#2ca02c", lw=1.8, label="Monte Carlo SD")
     fit_sd = np.exp(res_sd_intercept) * (n ** res_sd_slope)
     ax2.loglog(n, fit_sd, ":", color="#2ca02c", lw=1.2, label=f"SD fit (slope = {res_sd_slope:.3f})")
     
