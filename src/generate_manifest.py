@@ -11,6 +11,7 @@ Run:
 """
 
 import os
+import sys
 import json
 import numpy as np
 import pandas as pd
@@ -166,6 +167,29 @@ def main():
     manifest["figure_6_real_data_thinning"] = rd_dict
 
     # -------------------------------------------------------------
+    # 7b. Base-model evaluation metrics (accuracy, Brier, ROC-AUC)
+    # -------------------------------------------------------------
+    # Previously these were computed and printed by
+    # real_data_calibration_support.run_experiment_for_dataset() but never
+    # exported, so the accuracy figures quoted in the paper's prose had no
+    # generated macro tying them to the code and could silently go stale.
+    # Read from the exported metrics CSV when available; fields not yet
+    # populated by a from-scratch rerun (e.g. brier/auc, which require
+    # OpenML access to regenerate) are left out of the macro set rather
+    # than emitted as bogus zeros.
+    metrics_path = os.path.join(data_dir, "REAL_DATA_MODEL_METRICS.csv")
+    metrics_dict = {}
+    if os.path.exists(metrics_path):
+        df_metrics = pd.read_csv(metrics_path)
+        for _, r in df_metrics.iterrows():
+            entry = {}
+            for col in ("accuracy", "brier", "auc"):
+                if col in df_metrics.columns and pd.notna(r[col]):
+                    entry[col] = float(r[col])
+            metrics_dict[r["dataset"]] = entry
+    manifest["real_data_model_metrics"] = metrics_dict
+
+    # -------------------------------------------------------------
     # 8. Figure 7: Reverse Training Intervention
     # -------------------------------------------------------------
     df_rev = pd.read_csv(os.path.join(data_dir, "REVERSE_INTERVENTION_RESULTS.csv"))
@@ -184,53 +208,42 @@ def main():
     # -------------------------------------------------------------
     # 9. Table 4: Real-Data Nested Regressions
     # -------------------------------------------------------------
+    # Delegates to real_data_calibration_support.run_nested_decomposition so
+    # this manifest can never drift out of sync with the canonical fitting
+    # code (as an inline duplicate previously did). That function also reports
+    # a permutation test and k-fold cross-validated Delta R^2 alongside the
+    # in-sample Delta R^2: the in-sample bootstrap CI can never contain zero
+    # by construction (Model C's regressors are a superset of Model B's, so
+    # OLS in-sample R^2 cannot decrease), so it is retained only as a
+    # descriptive fit statistic, not as evidence that width helps.
+    sys.path.insert(0, os.path.join(root_dir, "src"))
+    from real_data_calibration_support import run_nested_decomposition
+
     df_pts = pd.read_csv(os.path.join(data_dir, "UNCERTAINTY_DECOMPOSITION.csv"))
     nested_dict = {}
     for ds in ["adult", "bank", "spambase"]:
-        sub = df_pts[df_pts["dataset"] == ds]
-        y = sub["sigma_cal"].values
-        A = sub["ambiguity"].values
-        E = sub["e_model"].values
-        W = sub["width"].values
-        
-        def fit_ols(X_mat, y_vec):
-            X_c = np.column_stack([np.ones(len(y_vec)), X_mat])
-            beta, _, _, _ = np.linalg.lstsq(X_c, y_vec, rcond=None)
-            pred = X_c @ beta
-            res = y_vec - pred
-            r2 = 1.0 - np.sum(res**2) / np.sum((y_vec - np.mean(y_vec))**2)
-            mae = np.mean(np.abs(res))
-            rmse = np.sqrt(np.mean(res**2))
-            return r2, mae, rmse
-
-        r2_A, mae_A, rmse_A = fit_ols(A.reshape(-1, 1), y)
-        r2_B, mae_B, rmse_B = fit_ols(np.column_stack([A, E]), y)
-        r2_C, mae_C, rmse_C = fit_ols(np.column_stack([A, E, W]), y)
-        delta_r2 = r2_C - r2_B
-        
-        rng = np.random.default_rng(42)
-        n_pts = len(y)
-        boot_deltas = []
-        for _ in range(2000):
-            idx = rng.choice(n_pts, size=n_pts, replace=True)
-            r2_Bb, _, _ = fit_ols(np.column_stack([A[idx], E[idx]]), y[idx])
-            r2_Cb, _, _ = fit_ols(np.column_stack([A[idx], E[idx], W[idx]]), y[idx])
-            boot_deltas.append(r2_Cb - r2_Bb)
-        ci_low, ci_high = np.percentile(boot_deltas, [2.5, 97.5])
-        
+        sub = df_pts[df_pts["dataset"] == ds].reset_index(drop=True)
+        res = run_nested_decomposition(sub, B_boot=2000, n_perm=5000, k_folds=10, seed=42)
         nested_dict[ds] = {
-            "model_a_r2": float(r2_A),
-            "model_a_mae": float(mae_A),
-            "model_a_rmse": float(rmse_A),
-            "model_b_r2": float(r2_B),
-            "model_b_mae": float(mae_B),
-            "model_b_rmse": float(rmse_B),
-            "model_c_r2": float(r2_C),
-            "model_c_mae": float(mae_C),
-            "model_c_rmse": float(rmse_C),
-            "delta_r2": float(delta_r2),
-            "delta_r2_ci_lower": float(ci_low),
-            "delta_r2_ci_upper": float(ci_high),
+            "model_a_r2": res["res_A"]["r2"],
+            "model_a_mae": res["res_A"]["mae"],
+            "model_a_rmse": res["res_A"]["rmse"],
+            "model_b_r2": res["res_B"]["r2"],
+            "model_b_mae": res["res_B"]["mae"],
+            "model_b_rmse": res["res_B"]["rmse"],
+            "model_c_r2": res["res_C"]["r2"],
+            "model_c_mae": res["res_C"]["mae"],
+            "model_c_rmse": res["res_C"]["rmse"],
+            "model_d_r2": res["res_D"]["r2"],
+            "model_d_mae": res["res_D"]["mae"],
+            "model_d_rmse": res["res_D"]["rmse"],
+            "delta_r2": res["delta_r2_CB"],
+            "delta_r2_ci_lower": float(res["ci_CB"][0]),
+            "delta_r2_ci_upper": float(res["ci_CB"][1]),
+            "perm_p_value": res["perm_p_value"],
+            "delta_r2_cv": res["delta_r2_cv"],
+            "r2_b_cv": res["r2_B_cv"],
+            "r2_c_cv": res["r2_C_cv"],
         }
     manifest["table_4_real_data_nested"] = nested_dict
 
@@ -245,8 +258,20 @@ def main():
     # -------------------------------------------------------------
     # Write paper/generated_results.tex (LaTeX macros)
     # -------------------------------------------------------------
+    _macro_name = {"adult": "Adult", "bank": "Bank", "spambase": "Spambase"}
+    accuracy_macro_lines = []
+    for ds, entry in manifest["real_data_model_metrics"].items():
+        if "accuracy" in entry:
+            accuracy_macro_lines.append(
+                f"\\newcommand{{\\{_macro_name.get(ds, ds.capitalize())}Accuracy}}{{{entry['accuracy'] * 100:.1f}}}"
+            )
+    accuracy_macros_block = "\n".join(accuracy_macro_lines)
+
     tex_content = f"""% generated_results.tex
 % Auto-generated by src/generate_manifest.py -- DO NOT EDIT DIRECTLY
+
+% Base-model evaluation metrics (held-out test accuracy, percent)
+{accuracy_macros_block}
 
 % Figure 2: Classifier Bootstrap (N=500)
 \\newcommand{{\\WidthPearson}}{{{manifest['figure_2_classifier_bootstrap']['width_pearson']:.4f}}}
@@ -291,6 +316,9 @@ def main():
 \\newcommand{{\\AdultDeltaRsq}}{{{manifest['table_4_real_data_nested']['adult']['delta_r2']:.4f}}}
 \\newcommand{{\\AdultDeltaRsqCILow}}{{{manifest['table_4_real_data_nested']['adult']['delta_r2_ci_lower']:.4f}}}
 \\newcommand{{\\AdultDeltaRsqCIHigh}}{{{manifest['table_4_real_data_nested']['adult']['delta_r2_ci_upper']:.4f}}}
+\\newcommand{{\\AdultModelDRsq}}{{{manifest['table_4_real_data_nested']['adult']['model_d_r2']:.4f}}}
+\\newcommand{{\\AdultPermPValue}}{{{manifest['table_4_real_data_nested']['adult']['perm_p_value']:.4f}}}
+\\newcommand{{\\AdultDeltaRsqCV}}{{{manifest['table_4_real_data_nested']['adult']['delta_r2_cv']:.4f}}}
 
 % Figure 6 & Table 4: Real Tabular Data - Bank
 \\newcommand{{\\BankWidthStart}}{{{manifest['figure_6_real_data_thinning']['bank']['width_100']:.4f}}}
@@ -302,6 +330,9 @@ def main():
 \\newcommand{{\\BankDeltaRsq}}{{{manifest['table_4_real_data_nested']['bank']['delta_r2']:.4f}}}
 \\newcommand{{\\BankDeltaRsqCILow}}{{{manifest['table_4_real_data_nested']['bank']['delta_r2_ci_lower']:.4f}}}
 \\newcommand{{\\BankDeltaRsqCIHigh}}{{{manifest['table_4_real_data_nested']['bank']['delta_r2_ci_upper']:.4f}}}
+\\newcommand{{\\BankModelDRsq}}{{{manifest['table_4_real_data_nested']['bank']['model_d_r2']:.4f}}}
+\\newcommand{{\\BankPermPValue}}{{{manifest['table_4_real_data_nested']['bank']['perm_p_value']:.4f}}}
+\\newcommand{{\\BankDeltaRsqCV}}{{{manifest['table_4_real_data_nested']['bank']['delta_r2_cv']:.4f}}}
 
 % Figure 6 & Table 4: Real Tabular Data - Spambase
 \\newcommand{{\\SpambaseWidthStart}}{{{manifest['figure_6_real_data_thinning']['spambase']['width_100']:.4f}}}
@@ -313,6 +344,9 @@ def main():
 \\newcommand{{\\SpambaseDeltaRsq}}{{{manifest['table_4_real_data_nested']['spambase']['delta_r2']:.4f}}}
 \\newcommand{{\\SpambaseDeltaRsqCILow}}{{{manifest['table_4_real_data_nested']['spambase']['delta_r2_ci_lower']:.4f}}}
 \\newcommand{{\\SpambaseDeltaRsqCIHigh}}{{{manifest['table_4_real_data_nested']['spambase']['delta_r2_ci_upper']:.4f}}}
+\\newcommand{{\\SpambaseModelDRsq}}{{{manifest['table_4_real_data_nested']['spambase']['model_d_r2']:.4f}}}
+\\newcommand{{\\SpambasePermPValue}}{{{manifest['table_4_real_data_nested']['spambase']['perm_p_value']:.4f}}}
+\\newcommand{{\\SpambaseDeltaRsqCV}}{{{manifest['table_4_real_data_nested']['spambase']['delta_r2_cv']:.4f}}}
 
 % Figure 7: Reverse Intervention Refits
 \\newcommand{{\\AdultRevEModelStart}}{{{manifest['figure_7_reverse_intervention']['adult']['e_model_100']:.4f}}}

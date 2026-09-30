@@ -11,8 +11,7 @@ Key features:
      early stopping on above 10,000 training samples and uses a random internal validation split keyed
      off random_state, which (a) makes E_model nonzero even when refitting on IDENTICAL data at
      train_fraction=1.0 in the reverse intervention (an early-stopping artifact of dataset size, not a
-     training-support effect) and (b) means those models may stop before the stated max_iter=200. See
-     Request 1 code review, Priority 3.
+     training-support effect) and (b) means those models may stop before the stated max_iter=200.
   2. Exact Venn-Abers computation via C-optimized isotonic regression (fast_va_scalar).
   3. Proper aggregation over R_thin = 100 independent local thinning replicates, where each thinned set
      is bootstrapped B_cal = 100 times to compute sigma_cal.
@@ -234,6 +233,7 @@ def run_experiment_for_dataset(
     brier = brier_score_loss(y_test, s_test)
     auc = roc_auc_score(y_test, s_test)
     print(f"  Base Model Evaluation -> Acc: {acc:.4f}, Brier: {brier:.4f}, ROC-AUC: {auc:.4f}")
+    model_metrics = {"dataset": dataset_name, "accuracy": float(acc), "brier": float(brier), "auc": float(auc)}
 
     # 2. Estimate Model Epistemic Uncertainty E_model(x) via B_model bootstrap refits on training set
     print(f"Estimating Model Epistemic Uncertainty (B_model={B_model}, max_iter=200)...")
@@ -398,7 +398,7 @@ def run_experiment_for_dataset(
         "sigma_cal": sigma_cal_eval,
     })
 
-    return df_thinning, df_reverse, df_points, selected_points_records
+    return df_thinning, df_reverse, df_points, selected_points_records, model_metrics
 
 
 def fit_linear_model(X_mat, y_vec):
@@ -421,13 +421,37 @@ def fit_linear_model(X_mat, y_vec):
     }
 
 
-def run_nested_decomposition(df_points, B_boot=2000, seed=42):
+def _kfold_cv_r2(X_mat, y_vec, k, rng):
+    """K-fold cross-validated R^2: out-of-sample residuals, not in-sample fit.
+
+    Unlike in-sample R^2 (which cannot decrease when a regressor is added, purely
+    as a matter of least-squares algebra), this can be negative or can decrease
+    when an added regressor carries no real out-of-sample signal, so it is a
+    valid way to test whether an extra regressor actually helps.
+    """
+    n = len(y_vec)
+    idx = rng.permutation(n)
+    folds = np.array_split(idx, k)
+    y_pred_oos = np.empty(n)
+    for i in range(k):
+        test_idx = folds[i]
+        train_idx = np.concatenate([folds[j] for j in range(k) if j != i])
+        fit = fit_linear_model(X_mat[train_idx], y_vec[train_idx])
+        X_design_test = np.column_stack([np.ones(len(test_idx)), X_mat[test_idx]])
+        y_pred_oos[test_idx] = X_design_test @ fit["beta"]
+    ss_res = np.sum((y_vec - y_pred_oos) ** 2)
+    ss_tot = np.sum((y_vec - np.mean(y_vec)) ** 2)
+    return 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
+
+
+def run_nested_decomposition(df_points, B_boot=2000, n_perm=5000, k_folds=10, seed=42):
     rng = set_seed(seed)
     y = df_points["sigma_cal"].values
     A = df_points["ambiguity"].values
     E = df_points["e_model"].values
     W = df_points["width"].values
     U = df_points["u_cal"].values
+    n = len(y)
 
     # Model A: sigma_cal ~ Ambiguity
     res_A = fit_linear_model(A.reshape(-1, 1), y)
@@ -435,14 +459,21 @@ def run_nested_decomposition(df_points, B_boot=2000, seed=42):
     res_B = fit_linear_model(np.column_stack([A, E]), y)
     # Model C: sigma_cal ~ Ambiguity + E_model + Width
     res_C = fit_linear_model(np.column_stack([A, E, W]), y)
-    # Model D: sigma_cal ~ Ambiguity + E_model + U_cal
+    # Model D: sigma_cal ~ Ambiguity + E_model + U_cal (the functional form the theory predicts)
     res_D = fit_linear_model(np.column_stack([A, E, U]), y)
 
+    # In-sample Delta R^2. NOTE: because Model C's regressors are a strict
+    # superset of Model B's, ordinary least squares guarantees delta_r2_CB >= 0
+    # algebraically, regardless of whether width carries any real signal beyond
+    # A and E -- adding any regressor to an unregularized OLS fit cannot lower
+    # in-sample R^2. The bootstrap CI computed by refitting in-sample on each
+    # resample inherits the same guarantee and can never contain zero, so it is
+    # NOT valid evidence that width helps; it is reported below only as a
+    # descriptive in-sample fit statistic, alongside the two tests that are
+    # actually informative (permutation test and cross-validated Delta R^2).
     delta_r2_CB = res_C["r2"] - res_B["r2"]
     delta_r2_CA = res_C["r2"] - res_A["r2"]
 
-    # Bootstrap CIs for Delta R2
-    n = len(y)
     boot_delta_CB = []
     boot_delta_CA = []
     for _ in range(B_boot):
@@ -457,6 +488,25 @@ def run_nested_decomposition(df_points, B_boot=2000, seed=42):
     ci_CB = np.percentile(boot_delta_CB, [2.5, 97.5])
     ci_CA = np.percentile(boot_delta_CA, [2.5, 97.5])
 
+    # Valid test 1: permutation test. Shuffle width relative to (y, A, E) so the
+    # null hypothesis (width carries no information about sigma_cal beyond A, E)
+    # is actually simulated, rather than compared against a guaranteed-positive
+    # in-sample quantity.
+    perm_delta = np.empty(n_perm)
+    for i in range(n_perm):
+        W_perm = rng.permutation(W)
+        r2_C_perm = fit_linear_model(np.column_stack([A, E, W_perm]), y)["r2"]
+        perm_delta[i] = r2_C_perm - res_B["r2"]
+    perm_p_value = float(np.mean(perm_delta >= delta_r2_CB))
+
+    # Valid test 2: k-fold cross-validated Delta R^2, an honest out-of-sample
+    # comparison that can be negative if width does not generalize.
+    cv_rng = set_seed(seed + 1)
+    r2_B_cv = _kfold_cv_r2(np.column_stack([A, E]), y, k_folds, cv_rng)
+    cv_rng = set_seed(seed + 1)
+    r2_C_cv = _kfold_cv_r2(np.column_stack([A, E, W]), y, k_folds, cv_rng)
+    delta_r2_cv = r2_C_cv - r2_B_cv
+
     return {
         "res_A": res_A,
         "res_B": res_B,
@@ -466,6 +516,10 @@ def run_nested_decomposition(df_points, B_boot=2000, seed=42):
         "ci_CB": ci_CB,
         "delta_r2_CA": delta_r2_CA,
         "ci_CA": ci_CA,
+        "perm_p_value": perm_p_value,
+        "delta_r2_cv": delta_r2_cv,
+        "r2_B_cv": r2_B_cv,
+        "r2_C_cv": r2_C_cv,
     }
 
 
@@ -578,11 +632,11 @@ def generate_figures_and_tables(df_all_thinning, df_all_reverse, df_all_points, 
         r"\begin{table}[htbp]",
         r"\centering",
         r"\small",
-        r"\caption{Held-out real-data comparison of calibration-instability models across three public tabular benchmarks ($N=500$ test points, $B_{\mathrm{cal}}=200$ resamples). Model A uses score-conditional outcome ambiguity $A(x)=\hat p(1-\hat p)$; Model B adds base-model epistemic uncertainty $E_{\mathrm{model}}(x)$; Model C adds Venn--Abers width $w(x)$. Across all datasets, Venn--Abers width provides an additional statistically detectable contribution to explaining calibration instability ($\Delta R^2$, 95\% bootstrap CI over 2,000 resamples), consistent with width capturing calibration-support information distinct from outcome ambiguity and base-model uncertainty.}",
+        r"\caption{Held-out real-data comparison of calibration-instability models across three public tabular benchmarks ($N=500$ test points, $B_{\mathrm{cal}}=200$ resamples). Model A uses score-conditional outcome ambiguity $A(x)=\hat p(1-\hat p)$; Model B adds base-model epistemic uncertainty $E_{\mathrm{model}}(x)$; Model C adds Venn--Abers width $w(x)$; Model D replaces $w$ with the theory-predicted composite $u_{\mathrm{cal}}(x)=\sqrt{A(x)\,w(x)}$. All $R^2$ values shown are in-sample and are reported descriptively: because Model C's regressors are a strict superset of Model B's, in-sample $R^2$ cannot decrease when $w$ is added, so the bootstrap CI on $\Delta R^2$(C$-$B) can never exclude zero by chance and is not evidence on its own. The permutation $p$-value (width shuffled against $A, E_{\mathrm{model}}$, 5,000 resamples) and the $10$-fold cross-validated $\Delta R^2$ are the valid, potentially-negative out-of-sample tests of whether $w$ has genuine incremental predictive value.}",
         r"\label{tab:real_data_nested}",
         r"\begin{tabular}{llccc}",
         r"\toprule",
-        r"Dataset & Model Specification & $R^2$ & MAE & RMSE \\",
+        r"Dataset & Model Specification & $R^2$ (in-sample) & MAE & RMSE \\",
         r"\midrule",
     ]
 
@@ -592,14 +646,19 @@ def generate_figures_and_tables(df_all_thinning, df_all_reverse, df_all_points, 
         r2_A, mae_A, rmse_A = d["res_A"]["r2"], d["res_A"]["mae"], d["res_A"]["rmse"]
         r2_B, mae_B, rmse_B = d["res_B"]["r2"], d["res_B"]["mae"], d["res_B"]["rmse"]
         r2_C, mae_C, rmse_C = d["res_C"]["r2"], d["res_C"]["mae"], d["res_C"]["rmse"]
+        r2_D, mae_D, rmse_D = d["res_D"]["r2"], d["res_D"]["mae"], d["res_D"]["rmse"]
         delta_CB = d["delta_r2_CB"]
         ci_l, ci_u = d["ci_CB"]
+        perm_p = d["perm_p_value"]
+        delta_cv = d["delta_r2_cv"]
 
         table_lines.extend([
-            f"\\multirow{{4}}{{*}}{{{lbl}}} & Model A: Ambiguity $A$ & {r2_A:.4f} & {mae_A:.4f} & {rmse_A:.4f} \\\\",
+            f"\\multirow{{6}}{{*}}{{{lbl}}} & Model A: Ambiguity $A$ & {r2_A:.4f} & {mae_A:.4f} & {rmse_A:.4f} \\\\",
             f" & Model B: Ambiguity + $E_{{\\mathrm{{model}}}}$ & {r2_B:.4f} & {mae_B:.4f} & {rmse_B:.4f} \\\\",
             f" & Model C: Ambiguity + $E_{{\\mathrm{{model}}}}$ + Width $w$ & \\textbf{{{r2_C:.4f}}} & \\textbf{{{mae_C:.4f}}} & \\textbf{{{rmse_C:.4f}}} \\\\",
-            f" & $\\Delta R^2$ (Model C $-$ Model B) & \\multicolumn{{3}}{{c}}{{+ {delta_CB:.4f} [95\\% CI: {ci_l:.4f}, {ci_u:.4f}]}} \\\\",
+            f" & Model D: Ambiguity + $E_{{\\mathrm{{model}}}}$ + $u_{{\\mathrm{{cal}}}}=\\sqrt{{Aw}}$ & {r2_D:.4f} & {mae_D:.4f} & {rmse_D:.4f} \\\\",
+            f" & $\\Delta R^2$ in-sample (C $-$ B, descriptive only) & \\multicolumn{{3}}{{c}}{{+ {delta_CB:.4f} [95\\% CI: {ci_l:.4f}, {ci_u:.4f}]}} \\\\",
+            f" & $\\Delta R^2$ 10-fold CV (C $-$ B) / permutation $p$ & \\multicolumn{{3}}{{c}}{{+ {delta_cv:.4f} / $p={perm_p:.4f}$}} \\\\",
             r"\midrule" if ds != datasets[-1] else r"\bottomrule",
         ])
 
@@ -626,16 +685,18 @@ def main():
     all_reverse = []
     all_points = []
     all_selected_points = []
+    all_model_metrics = []
     decomp_results = {}
 
     for ds in datasets:
-        df_thin, df_rev, df_pts, sel_pts = run_experiment_for_dataset(
+        df_thin, df_rev, df_pts, sel_pts, model_metrics = run_experiment_for_dataset(
             dataset_name=ds, seed=42, R_thin=100, B_cal=100, B_model=100, n_jobs=4
         )
         all_thinning.append(df_thin)
         all_reverse.append(df_rev)
         all_points.append(df_pts)
         all_selected_points.extend(sel_pts)
+        all_model_metrics.append(model_metrics)
         decomp_results[ds] = run_nested_decomposition(df_pts, B_boot=2000, seed=42)
 
     df_all_thinning = pd.concat(all_thinning, ignore_index=True)
@@ -659,6 +720,17 @@ def main():
     csv_sel_path = os.path.join(results_dir, "real_data_selected_points.csv")
     df_sel_points.to_csv(csv_sel_path, index=False)
     print(f"Saved pre-specified test points to: {csv_sel_path}")
+
+    # Base-model evaluation metrics (accuracy, Brier, ROC-AUC) on the held-out
+    # test set, per dataset. Previously computed and printed to stdout but not
+    # exported, so the accuracy/Brier/AUC figures quoted in the paper's prose
+    # could silently drift out of sync with the code (no macro tied them
+    # together). Persisting this table lets generate_manifest.py turn them
+    # into LaTeX macros so the manuscript always reflects the last run.
+    df_model_metrics = pd.DataFrame(all_model_metrics)
+    csv_metrics_path = os.path.join(data_dir, "REAL_DATA_MODEL_METRICS.csv")
+    df_model_metrics.to_csv(csv_metrics_path, index=False)
+    print(f"Saved base-model evaluation metrics to: {csv_metrics_path}")
 
     # Generate Figures and Tables
     generate_figures_and_tables(df_all_thinning, df_all_reverse, df_all_points, decomp_results)

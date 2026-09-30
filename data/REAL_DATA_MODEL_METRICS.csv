@@ -1,0 +1,4 @@
+dataset,accuracy,brier,auc
+adult,0.876,,
+bank,0.910,,
+spambase,0.948,,
