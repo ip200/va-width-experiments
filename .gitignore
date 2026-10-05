@@ -227,13 +227,6 @@ __marimo__/
 
 
 
-# Paper build artifacts (keep master tex, bib, generated macros, tables, figures)
-paper/*.aux
-paper/*.log
-paper/*.out
-paper/*.bbl
-paper/*.blg
-paper/*.synctex.gz
-paper/*.toc
-paper/*.fls
-paper/*.fdb_latexmk
+# Paper folder (kept locally, excluded from git repo)
+paper/
+
