@@ -59,20 +59,6 @@ va-width-experiments/
 │   ├── REVERSE_INTERVENTION_RESULTS.csv      # Figure 7: Reverse training-support intervention
 │   ├── UNCERTAINTY_DECOMPOSITION.csv         # Table 4: Held-out nested regression points
 │   └── table_w2_high_n_robustness.csv        # Pooled W2 regressions
-├── paper/                              # Generated figures & LaTeX tables (local / gitignored)
-│   ├── generated_results.tex           # Auto-generated LaTeX macros from data manifest
-│   ├── width_vs_bootstrap_instability.png # Figure 2 (PNG & PDF)
-│   ├── idealised_scaling_laws.png      # Figure 3 (PNG & PDF)
-│   ├── w2_exponent_convergence.png     # Figure 4 (PNG & PDF)
-│   ├── non_monotonic_scaling_laws.png  # Figure 5 (PNG & PDF)
-│   ├── real_data_local_support.png     # Figure 6 (PNG & PDF)
-│   ├── training_support_epistemic.png  # Figure 7 (PNG & PDF)
-│   ├── calibration_uncertainty_bootstrap.png # Figure 8: Calibrator comparison
-│   ├── alternative_calibrator_instability.png# Alternative calibrators scatter plot
-│   ├── table_calibration_resampling.tex# Table 1 LaTeX source
-│   ├── table_w2_exponent_progression.tex# Table 2 LaTeX source
-│   ├── table_cifar_correlations.tex    # Table 3 LaTeX source
-│   └── table_real_data_nested.tex      # Table 4 LaTeX source
 ├── results/                            # Manifests and evaluation artifacts
 │   ├── paper_results_manifest.json     # Machine-readable numerical results manifest
 │   ├── environment.txt                 # Exact environment, platform, and git commit
