@@ -1,6 +1,6 @@
 # The Meaning and Scaling of Venn--Abers Probability Intervals
 
-This repository contains the complete, self-contained codebase, empirical benchmarks, precomputed experimental data, and LaTeX source for the paper:
+This repository contains the complete, self-contained codebase, empirical benchmarks, and precomputed experimental data for the paper:
 
 > **The Meaning and Scaling of Venn--Abers Probability Intervals**  
 > Ivan Petej  
@@ -59,10 +59,7 @@ va-width-experiments/
 │   ├── REVERSE_INTERVENTION_RESULTS.csv      # Figure 7: Reverse training-support intervention
 │   ├── UNCERTAINTY_DECOMPOSITION.csv         # Table 4: Held-out nested regression points
 │   └── table_w2_high_n_robustness.csv        # Pooled W2 regressions
-├── paper/                              # Publication LaTeX source, figures, tables, and PDF
-│   ├── arxiv_va_interval_width.tex     # Master LaTeX manuscript (22 pages)
-│   ├── references.bib                  # BibTeX bibliography database
-│   ├── arxiv_va_interval_width.pdf     # Compiled publication PDF
+├── paper/                              # Generated figures & LaTeX tables (local / gitignored)
 │   ├── generated_results.tex           # Auto-generated LaTeX macros from data manifest
 │   ├── width_vs_bootstrap_instability.png # Figure 2 (PNG & PDF)
 │   ├── idealised_scaling_laws.png      # Figure 3 (PNG & PDF)
@@ -114,28 +111,17 @@ pip install -r requirements-lock.txt
 ```
 
 ### Fast Artifact Regeneration (< 10 seconds)
-Regenerate all publication-quality figures (PDF & PNG) and LaTeX tables directly from canonical precomputed experimental data:
+Regenerate all publication figures (PDF & PNG) and LaTeX tables directly from canonical precomputed experimental data into the local `paper/` directory:
 
 ```bash
 python src/generate_paper_artifacts.py
 ```
 
 ### Automated Consistency Verification (< 2 seconds)
-Verify that all committed data files, manifests, figures, and tables agree to $< 5\times 10^{-5}$ numerical tolerance with zero obsolete artifacts or collisions:
+Verify that all data files, manifests, figures, and tables agree to $< 5\times 10^{-5}$ numerical tolerance with zero obsolete artifacts or collisions:
 
 ```bash
 python src/verify_paper_consistency.py
-```
-
-### Recompile the LaTeX Manuscript
-Compile the camera-ready 22-page paper with `pdflatex` + `bibtex`:
-
-```bash
-cd paper
-pdflatex -interaction=nonstopmode arxiv_va_interval_width.tex
-bibtex arxiv_va_interval_width
-pdflatex -interaction=nonstopmode arxiv_va_interval_width.tex
-pdflatex -interaction=nonstopmode arxiv_va_interval_width.tex
 ```
 
 ---
